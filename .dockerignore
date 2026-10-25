@@ -1,0 +1,26 @@
+huan_jing/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.env
+.env.local
+shu_ju/
+ri_zhi/
+文档库/
+*.log
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 上传包 / AI Works Skill 探测产物
+wendangku_release.zip
+_tmp/
+.aiworks_skill/
+
+# 本地 GitHub 发布副本
+github_source/

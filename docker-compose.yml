@@ -1,0 +1,24 @@
+services:
+  wendangku:
+    build: .
+    container_name: wendangku
+    ports:
+      - "8001:8001"
+      # 需要 MCP HTTP 时取消注释，并把 MCP_HTTP_KAI_QI 改成 "true"
+      # - "8765:8765"
+    environment:
+      WEN_DANG_KU: /data/文档库
+      DB_LEI_XING: sqlite
+      SQLITE_LU_JING: /data/shu_ju/wen_dang_ku.db
+      CHROMA_LU_JING: /data/shu_ju/chroma
+      MO_XING_HUAN_CUN: /data/shu_ju/models
+      RI_ZHI_MU_LU: /data/shu_ju/logs
+      SHE_ZHI_WEN_JIAN: /data/shu_ju/she_zhi.json
+      DEEPSEEK_KEY: ${DEEPSEEK_KEY:-}
+      DEEPSEEK_MO_XING: ${DEEPSEEK_MO_XING:-deepseek-chat}
+      MCP_HTTP_KAI_QI: "false"
+    volumes:
+      # 文档库和向量库/模型缓存都放宿主机，容器重建不丢
+      - ./data/文档库:/data/文档库
+      - ./data/shu_ju:/data/shu_ju
+    restart: unless-stopped

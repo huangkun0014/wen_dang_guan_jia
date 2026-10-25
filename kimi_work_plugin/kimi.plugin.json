@@ -1,0 +1,15 @@
+{
+  "name": "wendangku",
+  "version": "1.1.0",
+  "description": "连接本机「文档库管家」，让 Kimi 搜索私人文档库、读取原文，并查询安管系统考核台账（按年月/班组/违章类型统计扣款），用于写分析、报告、总结或核对规章。",
+  "interface": {
+    "displayName": "文档库管家",
+    "shortDescription": "检索文档库 + 查询考核台账",
+    "longDescription": "调用本机文档库管家的混合检索（语义+关键词）、全文读取，以及 SQL Server 考核台账的查询/统计/相似案例检索。使用前请先启动文档库管家（桌面「文档库管家.bat」），它提供 MCP 接口 http://127.0.0.1:8765/mcp。"
+  },
+  "mcpServers": {
+    "wendangku": {
+      "url": "http://127.0.0.1:8765/mcp"
+    }
+  }
+}

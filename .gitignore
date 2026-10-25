@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# 虚拟环境（本机自己的，不要上传）
+huan_jing/
+venv/
+.venv/
+env/
+
+# 密钥 / 本机设置（重要：不要提交）
+shu_ju/she_zhi.json
+.env
+.env.local
+*.key
+*.pem
+
+# 运行数据：向量库、模型缓存、日志、默认文档库
+shu_ju/
+ri_zhi/
+文档库/
+*.log
+
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# AI Works Skill / 探测产物
+_tmp/
+.aiworks_skill/
+
+# 本地 GitHub 发布副本
+github_source/

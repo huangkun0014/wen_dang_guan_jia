@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文档库管家</title>
+<style>
+/* ============ 基础样式（深蓝主题，和文档库定位一致） ============ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --beijing: #0f172a; --qian-beijing: #1e293b; --bian-kuang: #334155;
+  --wen-zi: #e2e8f0; --ci-yao-wen-zi: #94a3b8; --zhu-se: #38bdf8;
+  --cheng-gong: #4ade80; --jing-gao: #fbbf24; --cuo-wu: #f87171;
+}
+body { background: var(--beijing); color: var(--wen-zi); font-family: "Microsoft YaHei", sans-serif; min-height: 100vh; }
+.bao { max-width: 1500px; margin: 0 auto; padding: 20px 16px; }
+
+/* 头部 */
+header { margin-bottom: 18px; }
+header h1 { font-size: 24px; display: flex; align-items: center; gap: 8px; }
+header p { color: var(--ci-yao-wen-zi); font-size: 13px; margin-top: 4px; }
+
+/* 状态卡片 */
+.zhuang-tai { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.ka-pian { background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 8px; padding: 10px 16px; flex: 1; min-width: 130px; }
+.ka-pian .shu { font-size: 22px; font-weight: bold; color: var(--zhu-se); }
+.ka-pian .ming { font-size: 12px; color: var(--ci-yao-wen-zi); margin-top: 2px; }
+
+/* 标签页 */
+.biao-qian { display: flex; gap: 4px; background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 8px; padding: 4px; margin-bottom: 16px; }
+.biao-qian button { flex: 1; padding: 9px; border: none; background: transparent; color: var(--ci-yao-wen-zi); border-radius: 6px; cursor: pointer; font-size: 14px; }
+.biao-qian button.dang-qian { background: var(--zhu-se); color: #0f172a; font-weight: bold; }
+
+/* 搜索框 */
+.sou-suo-kuang { position: relative; margin-bottom: 12px; }
+.sou-suo-kuang input { width: 100%; padding: 12px 14px 12px 40px; font-size: 15px; background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 8px; color: var(--wen-zi); outline: none; }
+.sou-suo-kuang input:focus { border-color: var(--zhu-se); }
+.sou-suo-kuang .tu-biao { position: absolute; left: 13px; top: 12px; font-size: 16px; }
+.mo-shi { font-size: 12px; color: var(--ci-yao-wen-zi); margin-bottom: 10px; display: flex; gap: 12px; align-items: center; }
+.mo-shi label { cursor: pointer; }
+.ss-sha { padding: 4px 8px; background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 6px; color: var(--wen-zi); font-size: 12px; outline: none; }
+.ss-sha:focus { border-color: var(--zhu-se); }
+.jie-guo-shu { font-size: 13px; color: var(--ci-yao-wen-zi); margin-bottom: 8px; }
+
+/* 结果条目 */
+.tiao-mu { background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.tiao-mu .xin-xi { flex: 1; min-width: 0; }
+.tiao-mu .xin-xi .ming { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tiao-mu .xin-xi .lu-jing { font-size: 12px; color: var(--ci-yao-wen-zi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.tiao-mu .xin-xi .zhai-yao { font-size: 12px; color: var(--zhu-se); margin-top: 2px; }
+.tiao-mu .xiang-si { font-size: 12px; color: var(--cheng-gong); white-space: nowrap; }
+
+/* 按钮 */
+.an-niu { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--bian-kuang); background: transparent; color: var(--wen-zi); cursor: pointer; font-size: 13px; white-space: nowrap; }
+.an-niu:hover { border-color: var(--zhu-se); color: var(--zhu-se); }
+.an-niu.zhu-yao { background: var(--zhu-se); color: #0f172a; border: none; font-weight: bold; }
+.an-niu.zhu-yao:hover { opacity: .9; color: #0f172a; }
+.an-niu:disabled { opacity: .4; cursor: not-allowed; }
+
+/* 收件箱 */
+.shuo-ming { font-size: 13px; color: var(--ci-yao-wen-zi); background: var(--qian-beijing); border: 1px dashed var(--bian-kuang); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; line-height: 1.7; }
+.shuo-ming code { background: var(--beijing); padding: 1px 6px; border-radius: 4px; color: var(--zhu-se); }
+.gui-dang-bian-ji { margin-top: 10px; border-top: 1px solid var(--bian-kuang); padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gui-dang-bian-ji .quan-bu { grid-column: 1 / -1; }
+.gui-dang-bian-ji label { font-size: 12px; color: var(--ci-yao-wen-zi); display: block; margin-bottom: 4px; }
+.gui-dang-bian-ji input { width: 100%; padding: 8px 10px; background: var(--beijing); border: 1px solid var(--bian-kuang); border-radius: 6px; color: var(--wen-zi); font-size: 13px; outline: none; }
+.gui-dang-bian-ji input:focus { border-color: var(--zhu-se); }
+.nei-rong-yu-lan { grid-column: 1 / -1; font-size: 12px; color: var(--ci-yao-wen-zi); background: var(--beijing); border-radius: 6px; padding: 8px 10px; max-height: 70px; overflow-y: auto; }
+.ai-biao-ji { display: inline-block; font-size: 11px; background: var(--zhu-se); color: #0f172a; border-radius: 4px; padding: 1px 6px; margin-right: 6px; font-weight: bold; }
+.ai-biao-ji.hui-tui { background: var(--jing-gao); }
+
+/* 索引进度条 */
+.jin-du-tiao { height: 6px; background: var(--qian-beijing); border-radius: 3px; overflow: hidden; margin: 10px 0 4px; }
+.jin-du-tiao .nei { height: 100%; background: var(--zhu-se); transition: width .3s; }
+.jin-du-wen-zi { font-size: 12px; color: var(--ci-yao-wen-zi); }
+
+.gong-ju-lan { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.kong-bai { text-align: center; color: var(--ci-yao-wen-zi); padding: 40px 0; border: 1px dashed var(--bian-kuang); border-radius: 8px; }
+.yin-cang { display: none !important; }
+
+/* ============ 全局"处理中"遮罩：执行批量操作时锁住页面，防止误点 ============ */
+.mang-zhe { position: fixed; inset: 0; background: rgba(15,23,42,.72); display: flex; align-items: center; justify-content: center; z-index: 300; }
+.mang-zhe .he-zi { background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 10px; padding: 22px 36px; display: flex; align-items: center; gap: 14px; font-size: 15px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.mang-zhe .zhuan-quan { width: 24px; height: 24px; border: 3px solid var(--bian-kuang); border-top-color: var(--zhu-se); border-radius: 50%; animation: mangZhuan .8s linear infinite; flex-shrink: 0; }
+@keyframes mangZhuan { to { transform: rotate(360deg); } }
+
+/* ============ 浏览页（层级目录） ============ */
+.mian-bao { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 13px; margin-bottom: 12px; background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 8px; padding: 8px 12px; }
+.mian-bao a { color: var(--zhu-se); cursor: pointer; text-decoration: none; }
+.mian-bao a:hover { text-decoration: underline; }
+.mian-bao .fen-ge { color: var(--ci-yao-wen-zi); }
+.hang { display: flex; align-items: center; gap: 10px; background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 8px; padding: 9px 14px; margin-bottom: 6px; }
+.hang:hover { border-color: var(--zhu-se); }
+.hang .tu-biao2 { font-size: 16px; width: 24px; text-align: center; }
+.hang .xin-xi { flex: 1; min-width: 0; }
+.hang .ming2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.hang .ming2:hover { color: var(--zhu-se); }
+.hang .fu-zhu { font-size: 12px; color: var(--ci-yao-wen-zi); white-space: nowrap; }
+.hang.wen-jian-jia .ming2 { font-weight: 500; }
+
+/* ============ 重命名弹窗 ============ */
+.tan-chuang-zhao { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.tan-chuang { background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 10px; padding: 18px; width: 560px; max-width: 94vw; max-height: 88vh; overflow-y: auto; }
+.tan-chuang h3 { margin-bottom: 12px; font-size: 16px; }
+.tan-chuang .yuan-ming { font-size: 12px; color: var(--ci-yao-wen-zi); margin-bottom: 10px; word-break: break-all; }
+.tan-chuang input { width: 100%; padding: 9px 10px; background: var(--beijing); border: 1px solid var(--bian-kuang); border-radius: 6px; color: var(--wen-zi); font-size: 14px; outline: none; }
+.tan-chuang input:focus { border-color: var(--zhu-se); }
+.shen-he-jie-guo { margin: 10px 0; font-size: 12px; background: var(--beijing); border-radius: 6px; padding: 8px 10px; display: none; }
+.shen-he-jie-guo .gui-fan-ming { color: var(--cheng-gong); font-size: 13px; font-weight: 500; word-break: break-all; }
+.shen-he-jie-guo ul { margin: 6px 0 0 16px; color: var(--jing-gao); line-height: 1.7; }
+.tan-chuang .an-niu-lan { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+
+/* 批量处理审阅面板的输入框 */
+.plfx-in { width: 100%; padding: 6px 8px; background: var(--beijing); border: 1px solid var(--bian-kuang); border-radius: 6px; color: var(--wen-zi); font-size: 12px; outline: none; margin-top: 2px; }
+.plfx-in:focus { border-color: var(--zhu-se); }
+
+/* 提示词设置的多行文本框 */
+.ts-wen-ben { width: 100%; padding: 8px 10px; background: var(--beijing); border: 1px solid var(--bian-kuang); border-radius: 6px; color: var(--wen-zi); font-size: 13px; line-height: 1.6; outline: none; resize: vertical; font-family: inherit; }
+.ts-wen-ben:focus { border-color: var(--zhu-se); }
+
+/* 系统设置弹窗 */
+.sz-kuai { border-top: 1px solid var(--bian-kuang); margin-top: 14px; padding-top: 12px; }
+.sz-kuai h4 { font-size: 14px; margin-bottom: 8px; color: var(--zhu-se); }
+.sz-hang { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.sz-hang > label { flex: 0 0 110px; font-size: 12px; color: var(--ci-yao-wen-zi); padding-top: 8px; }
+.sz-hang input, .sz-hang select { flex: 1; min-width: 0; }
+.sz-hang input[type="checkbox"] { flex: 0 0 auto; width: auto; }
+.sz-hang > label.sz-check { flex: 1; padding-top: 8px; font-size: 13px; }
+.tan-chuang select { width: 100%; padding: 9px 10px; background: var(--beijing); border: 1px solid var(--bian-kuang); border-radius: 6px; color: var(--wen-zi); font-size: 14px; outline: none; }
+.tan-chuang select:focus { border-color: var(--zhu-se); }
+.sz-ti-shi { font-size: 11px; color: var(--ci-yao-wen-zi); margin: 2px 0 6px 120px; line-height: 1.6; }
+.sz-jie-guo { font-size: 12px; align-self: center; color: var(--ci-yao-wen-zi); }
+
+/* 考核查询页 */
+.kh-sha { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.kh-sha input, .kh-sha select, .gong-ju-lan select { padding: 8px 10px; background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 6px; color: var(--wen-zi); font-size: 13px; outline: none; }
+.kh-sha input:focus, .kh-sha select:focus { border-color: var(--zhu-se); }
+.kh-fen-ye { display: flex; gap: 10px; align-items: center; justify-content: center; margin-top: 12px; }
+.kh-tong-ji-kuang { background: var(--qian-beijing); border: 1px solid var(--bian-kuang); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+.kh-tiao { display: flex; align-items: center; gap: 8px; font-size: 12px; margin: 3px 0; }
+.kh-tiao .ming { width: 170px; color: var(--ci-yao-wen-zi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kh-tiao .tiao { height: 9px; background: var(--zhu-se); border-radius: 5px; min-width: 2px; }
+.kh-tiao .shu { color: var(--wen-zi); white-space: nowrap; }
+.kh-xiang { font-size: 12px; color: var(--ci-yao-wen-zi); line-height: 1.7; }
+.kh-xiang b { color: var(--wen-zi); font-weight: 500; }
+.kh-biao-qian { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 10px; background: #1e293b; color: var(--zhu-se); margin-right: 4px; }
+</style>
+</head>
+<body>
+<div class="bao">
+
+  <header style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+    <div>
+      <h1>📚 文档库管家</h1>
+      <p id="fu-wu-xin-xi">加载中…</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="an-niu" style="margin-top:4px" onclick="da_kai_sz_tan()">⚙️ 系统设置</button>
+      <button class="an-niu" style="margin-top:4px" onclick="da_kai_ts_tan()">✍ 提示词设置</button>
+    </div>
+  </header>
+
+  <!-- 状态卡片 -->
+  <div class="zhuang-tai">
+    <div class="ka-pian"><div class="shu" id="st-zong">-</div><div class="ming">文档总数</div></div>
+    <div class="ka-pian"><div class="shu" id="st-suo">-</div><div class="ming">已索引</div></div>
+    <div class="ka-pian"><div class="shu" id="st-xiang">-</div><div class="ming">语义向量</div></div>
+    <div class="ka-pian"><div class="shu" id="st-kuai">-</div><div class="ming">段落索引块</div></div>
+    <div class="ka-pian"><div class="shu" id="st-zhai">-</div><div class="ming">有摘要</div></div>
+  </div>
+
+  <!-- 标签页 -->
+  <div class="biao-qian">
+    <button id="bt-sou-suo" class="dang-qian" onclick="qie_huan('sou-suo')">🔍 搜索文档</button>
+    <button id="bt-liu-lan" onclick="qie_huan('liu-lan')">🗃 浏览文档库</button>
+    <button id="bt-ti-jian" onclick="qie_huan('ti-jian')">🩺 归类体检</button>
+    <button id="bt-shou-jian-xiang" onclick="qie_huan('shou-jian-xiang')">📥 收件箱归档</button>
+    <button id="bt-suo-yin" onclick="qie_huan('suo-yin')">🗂️ 索引管理</button>
+    <button id="bt-kao-he" onclick="qie_huan('kao-he')">📋 考核查询</button>
+  </div>
+
+  <!-- ============ 搜索页 ============ -->
+  <div id="ye-sou-suo">
+    <div class="sou-suo-kuang">
+      <span class="tu-biao">🔍</span>
+      <input id="sou-suo-ci" placeholder="输入关键词搜索，空格分隔多个条件" oninput="sou_suo_yan_chi()">
+    </div>
+    <div class="mo-shi">
+      <span>搜索方式：</span>
+      <label><input type="radio" name="mo-shi" value="ming" checked onchange="sou_suo_yan_chi()"> 按文件名</label>
+      <label><input type="radio" name="mo-shi" value="yu-yi" onchange="sou_suo_yan_chi()"> 按意思（语义+关键词，需先建索引）</label>
+      <span style="margin-left:auto">文种：</span>
+      <select id="ss-wen-zhong" class="ss-sha" onchange="sou_suo_yan_chi()">
+        <option value="">全部</option>
+        <option>规章制度</option><option>工作通知</option><option>通报</option>
+        <option>分析报告</option><option>工作总结</option><option>考核信息</option>
+        <option>会议纪要</option><option>台账</option><option>申请审批</option>
+        <option>说明材料</option><option>论文</option><option>其他</option>
+      </select>
+      <span>年份：</span>
+      <select id="ss-nian-fen" class="ss-sha" onchange="sou_suo_yan_chi()">
+        <option value="">全部</option>
+        <option>2026</option><option>2025</option><option>2024</option><option>2023</option>
+        <option>2022</option><option>2021</option><option>2020</option><option>2019</option>
+        <option>2018</option><option>2017</option><option>2016</option><option>2015</option>
+      </select>
+    </div>
+    <div class="jie-guo-shu" id="jie-guo-shu"></div>
+    <div class="gong-ju-lan" id="sou-suo-gong-ju-lan" style="display:none">
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi)"><input type="checkbox" id="ss-quan-xuan" onchange="ss_quan_xuan()"> 全选</label>
+      <button class="an-niu zhu-yao" onclick="ss_pi_liang_fen_xi()">✨ 批量 AI 处理（命名+标签）</button>
+      <button class="an-niu" style="color:var(--cuo-wu);border-color:#7f1d1d" onclick="ss_pi_liang_shan_chu()">🗑 批量删除选中</button>
+    </div>
+    <div id="ss-pi-liang-mian-ban" style="display:none;margin:10px 0"></div>
+    <div id="sou-suo-jie-guo"></div>
+  </div>
+
+  <!-- ============ 浏览页 ============ -->
+  <div id="ye-liu-lan" class="yin-cang">
+    <div class="shuo-ming">
+      🗃 像资源管理器一样逐层浏览文档库。重命名会按命名规范自动审核
+      （日期前缀、非法字符、扩展名保护），改完自动重建向量索引；
+      删除（单个文件、勾选批量、整个文件夹）都会移入回收站并清理索引；
+      勾选后可"批量 AI 处理"（逐个生成 规范名+标签+摘要，审阅后按需应用）。
+    </div>
+    <div class="gong-ju-lan">
+      <button class="an-niu" onclick="liu_lan_shang_yi_ji()">⬆ 上级目录</button>
+      <button class="an-niu" onclick="jia_zai_liu_lan()">🔄 刷新</button>
+      <button class="an-niu" onclick="da_kai_dang_qian_mu_lu()">📂 在资源管理器中打开</button>
+      <button class="an-niu zhu-yao" onclick="ll_pi_liang_fen_xi()">✨ 批量 AI 处理（选中：命名+标签）</button>
+      <span style="flex:1"></span>
+      <button class="an-niu" style="color:var(--cuo-wu);border-color:#7f1d1d" onclick="pi_liang_shan_chu()">🗑 批量删除选中文件</button>
+    </div>
+    <div class="mian-bao" id="liu-lan-mian-bao"></div>
+    <div id="ll-pi-liang-mian-ban" style="display:none;margin:10px 0"></div>
+    <div id="liu-lan-lie-biao"></div>
+  </div>
+
+  <!-- ============ 归类体检页 ============ -->
+  <div id="ye-ti-jian" class="yin-cang">
+    <div class="shuo-ming">
+      🩺 一次扫描同时审两件事：<strong>标签是否合适</strong> + <strong>文件名是否规范</strong>（程序先免费规则检查，
+      有命名问题的交给 DeepSeek 一并起好规范名）。审核是<strong>只读的</strong>，动数据前必须你确认。
+      <strong>追加模式</strong>（默认勾选）跳过已体检过的文件，取消勾选则全量重扫。
+      「改标签」只作用于<span style="color:var(--cuo-wu)">建议改标签</span>的条目；
+      「加标签」作用于<span style="color:var(--jing-gao)">建议加标签</span>和<span style="color:var(--cuo-wu)">建议改标签</span>的条目；
+      「重命名」原地改名不动位置。所有操作<strong>都不移动文件</strong>，改标签后向量自动重建。
+    </div>
+    <div class="gong-ju-lan">
+      <select id="tj-fan-wei" style="padding:8px;background:#0f172a;border:1px solid var(--bian-kuang);border-radius:6px;color:var(--wen-zi)">
+        <option value="">全库扫描（较慢）</option>
+      </select>
+      <button class="an-niu zhu-yao" onclick="kai_shi_ti_jian()">▶ 开始体检</button>
+      <button class="an-niu" onclick="jia_zai_ti_jian_jie_guo()">🔄 刷新结果</button>
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi)"><input type="checkbox" id="tj-zhui-jia" checked> 追加模式（跳过已体检的）</label>
+      <span id="tj-tong-ji" style="font-size:12px;color:var(--ci-yao-wen-zi);align-self:center"></span>
+    </div>
+    <div class="jin-du-tiao"><div class="nei" id="tj-jin-du-nei" style="width:0%"></div></div>
+    <div class="jin-du-wen-zi" id="tj-jin-du-wen-zi">尚未开始</div>
+    <div class="gong-ju-lan" style="margin-top:12px" id="tj-pi-liang-lan" >
+      <button class="an-niu zhu-yao" onclick="tj_pi_liang('gai_biao_qian')">🏷 改标签选中项</button>
+      <button class="an-niu" onclick="tj_pi_liang('jia_biao_qian')">➕ 加标签选中项</button>
+      <button class="an-niu" onclick="tj_pi_liang('zhong_ming')">✏️ 重命名选中项</button>
+      <button class="an-niu" onclick="tj_pi_liang('ignore')">🚫 忽略选中项</button>
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi)"><input type="checkbox" id="tj-quan-xuan" onchange="tj_quan_xuan()"> 全选</label>
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi)"><input type="checkbox" id="tj-zhi-kan-jian-yi" checked onchange="jia_zai_ti_jian_jie_guo()"> 只看有建议的</label>
+    </div>
+    <div id="tj-lie-biao"></div>
+  </div>
+
+
+  <!-- ============ 收件箱页 ============ -->
+  <div id="ye-shou-jian-xiang" class="yin-cang">
+    <div class="shuo-ming">
+      📥 把任何文件丢到 <code id="shou-jian-xiang-lu-jing">文档库路径\00-收件箱</code>，然后点"AI 命名"：
+      DeepSeek 会读内容后给出<strong>规范文件名 + 摘要 + 标签</strong>，确认后一键归档。
+      归档按文件名里的日期自动归入对应年份目录，标签用于语义搜索和归类。
+      图片类文件（发票/截图/照片）由视觉模型识别内容后再命名。
+    </div>
+    <div class="gong-ju-lan">
+      <button class="an-niu" onclick="da_kai_mu_lu()">📂 打开收件箱文件夹</button>
+      <button class="an-niu" onclick="jia_zai_shou_jian_xiang()">🔄 刷新列表</button>
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi)"><input type="checkbox" id="sjx-quan-xuan" onchange="sjx_quan_xuan()"> 全选</label>
+      <button class="an-niu zhu-yao" onclick="pi_liang_ai_ming_ming()">✨ 批量 AI 命名（选中）</button>
+      <button class="an-niu zhu-yao" onclick="pi_liang_gui_dang()">✓ 批量归档（选中）</button>
+      <span id="sjx-pi-liang-zhuang-tai" style="font-size:12px;color:var(--ci-yao-wen-zi);align-self:center"></span>
+    </div>
+    <div id="shou-jian-xiang-lie-biao"></div>
+  </div>
+
+  <!-- ============ 索引管理页 ============ -->
+  <div id="ye-suo-yin" class="yin-cang">
+    <div class="shuo-ming">
+      🗂️ <strong>语义搜索的前提</strong>：把文档内容转成向量（整篇 + 段落分块两层，搜索能命中到具体段落）。
+      点"开始增量索引"即可，以后新文件只补增量；目录结构大改过才需要"全量重建"（会重建分块索引，耗时较长）。
+      索引完成后可点"批量生成摘要"，语义搜索的结果页会显示每份文件的一句话说明和相关片段。
+    </div>
+    <div class="gong-ju-lan">
+      <button class="an-niu zhu-yao" onclick="kai_shi_suo_yin()">▶ 开始增量索引</button>
+      <button class="an-niu" onclick="pi_liang_zhai_yao()">✨ 批量生成摘要</button>
+      <button class="an-niu" onclick="jian_cha_suo_yin()">🔍 完整性检查</button>
+      <button class="an-niu" onclick="chong_jian_suo_yin()">♻ 全量重建（谨慎）</button>
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi);align-self:center"><input type="checkbox" id="cj-chu-li-sjx"> 重建时处理收件箱（AI命名+归档）</label>
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi);align-self:center"><input type="checkbox" id="cj-ai-ming"> 重建时用 AI 统一规范文件名（会改名）</label>
+    </div>
+    <div class="jin-du-tiao"><div class="nei" id="jin-du-nei" style="width:0%"></div></div>
+    <div class="jin-du-wen-zi" id="jin-du-wen-zi">尚未开始</div>
+    <div id="suo-yin-jian-cha" style="margin-top:12px;font-size:13px"></div>
+  </div>
+
+  <!-- ============ 考核查询页 ============ -->
+  <div id="ye-kao-he" class="yin-cang">
+    <div class="shuo-ming">
+      📋 查询考核台账（只读）。需要先在「⚙️ 系统设置 → 考核数据库」里配置 SQL Server；
+      未配置时本页会提示“未启用”，不影响文档搜索和规章核对。
+      写考核分析、通报、总结时，可先在这里找同类历史问题；Kimi 等 AI 也能通过 MCP 查同一份数据。
+    </div>
+    <div class="kh-sha">
+      <input id="kh-ci" placeholder="关键词（空格分隔，如：车钩 锁铁）" style="flex:1;min-width:220px"
+             onkeydown="if(event.key==='Enter')kh_cha(0)">
+      <select id="kh-nian"><option value="">全部年份</option><option>2025</option><option>2026</option></select>
+      <select id="kh-da-lei">
+        <option value="">全部大类</option>
+        <option>设备质量</option><option>现场三违</option><option>安全管理</option>
+        <option>教育培训</option><option>其它问题</option>
+      </select>
+      <select id="kh-ji-bie">
+        <option value="">全部级别</option>
+        <option>车间级</option><option>站段级</option><option>路局级</option>
+      </select>
+      <input id="kh-ban-zu" placeholder="责任班组（可只写一部分）" style="width:190px">
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi)"><input type="checkbox" id="kh-zhong-dian"> 只看重点</label>
+      <button class="an-niu zhu-yao" onclick="kh_cha(0)">查询</button>
+    </div>
+    <div class="gong-ju-lan" style="margin-bottom:10px">
+      <span style="font-size:12px;color:var(--ci-yao-wen-zi);align-self:center">统计口径：</span>
+      <select id="kh-fen-zu">
+        <option>条例大类</option><option>责任班组</option><option>责任车间</option>
+        <option>年月</option><option>年份</option><option>月份</option><option>级别</option>
+        <option>问题层级</option><option>问题来源</option><option>检查人</option><option>条例条目</option>
+      </select>
+      <button class="an-niu" onclick="kh_tong_ji('shu')">统计条数</button>
+      <button class="an-niu" onclick="kh_tong_ji('qian')">统计扣款</button>
+    </div>
+    <div class="jie-guo-shu" id="kh-jie-guo-shu"></div>
+    <div id="kh-tong-ji"></div>
+    <div id="kh-lie-biao"></div>
+    <div class="kh-fen-ye" id="kh-fen-ye" style="display:none">
+      <button class="an-niu" onclick="kh_fan_ye(-1)">← 上一页</button>
+      <span id="kh-ye-ma" style="font-size:12px;color:var(--ci-yao-wen-zi)"></span>
+      <button class="an-niu" onclick="kh_fan_ye(1)">下一页 →</button>
+    </div>
+  </div>
+
+  <!-- ============ 全局"处理中"遮罩 ============ -->
+  <div id="mang-zhe" class="mang-zhe yin-cang">
+    <div class="he-zi"><div class="zhuan-quan"></div><span id="mang-wen-zi">处理中，请稍候…</span></div>
+  </div>
+
+  <!-- ============ 重命名弹窗 ============ -->
+  <div id="zhong-ming-tan" class="tan-chuang-zhao yin-cang">
+    <div class="tan-chuang">
+      <h3>✏️ 重命名（自动按规范审核）</h3>
+      <div class="yuan-ming" id="zm-yuan-ming"></div>
+      <input id="zm-shu-ru" placeholder="输入新文件名…" oninput="zm_yu_lan_shen_he()">
+      <div class="shen-he-jie-guo" id="zm-shen-he">
+        <div>规范结果：<span class="gui-fan-ming" id="zm-gui-fan-ming"></span></div>
+        <ul id="zm-yi-jian"></ul>
+      </div>
+      <div id="zm-tu-pian-jing-gao" style="display:none;margin:8px 0;font-size:12px;color:#f59e0b"></div>
+      <div class="an-niu-lan">
+        <button class="an-niu" onclick="zm_ai_jian_yi(this)">✨ AI 规范命名</button>
+        <span style="flex:1"></span>
+        <button class="an-niu" onclick="guan_bi_zm_tan()">取消</button>
+        <button class="an-niu zhu-yao" onclick="zm_que_ren()">✓ 确认重命名</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 标签/摘要编辑弹窗 ============ -->
+  <div id="biao-qian-tan" class="tan-chuang-zhao yin-cang">
+    <div class="tan-chuang">
+      <h3>🏷 编辑标签 / 摘要</h3>
+      <div class="yuan-ming" id="bq-yuan-ming"></div>
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi);display:block;margin-bottom:4px">标签（逗号分隔，第一个是归口类别）</label>
+      <input id="bq-shu-ru" placeholder="如：个人照片,证件照,张三">
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi);display:block;margin:10px 0 4px">摘要（一句话说明）</label>
+      <input id="bq-zhai-yao" placeholder="如：张三的一寸红底证件照">
+      <div id="bq-yu-lan" class="nei-rong-yu-lan" style="display:none"></div>
+      <div class="an-niu-lan">
+        <button class="an-niu" onclick="bq_ai_sheng_cheng(this)">✨ AI 生成</button>
+        <span style="flex:1"></span>
+        <button class="an-niu" onclick="guan_bi_bq_tan()">取消</button>
+        <button class="an-niu zhu-yao" onclick="bq_bao_cun()">✓ 保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 系统设置弹窗 ============ -->
+  <div id="she-zhi-tan" class="tan-chuang-zhao yin-cang">
+    <div class="tan-chuang" style="width:820px">
+      <h3>⚙️ 系统设置</h3>
+      <div class="yuan-ming" id="sz-dang-qian"></div>
+
+      <div class="sz-kuai">
+        <h4>📁 文档库</h4>
+        <div class="sz-hang"><label>文档库路径</label>
+          <input id="sz-wen-dang-ku" placeholder="例如 /data/文档库 或 D:\你的文档库">
+        </div>
+        <div class="sz-ti-shi">改路径后需要重启服务，并到「索引管理」全量重建一次；收件箱和年份目录会自动创建。</div>
+      </div>
+
+      <div class="sz-kuai">
+        <h4>🗄️ 应用台账库</h4>
+        <div class="sz-hang"><label>数据库类型</label>
+          <select id="sz-db-lei-xing" onchange="sz_qie_huan_db()">
+            <option value="sqlite">SQLite（推荐，零配置）</option>
+            <option value="mssql">SQL Server</option>
+          </select>
+        </div>
+        <div id="sz-sqlite-kuai">
+          <div class="sz-hang"><label>SQLite 文件</label>
+            <input id="sz-sqlite-lu-jing" placeholder="shu_ju/wen_dang_ku.db">
+          </div>
+        </div>
+        <div id="sz-mssql-kuai">
+          <div class="sz-hang"><label>服务器</label><input id="sz-sql-server" placeholder="127.0.0.1,1433"></div>
+          <div class="sz-hang"><label>用户名</label><input id="sz-sql-yong-hu" placeholder="sa"></div>
+          <div class="sz-hang"><label>密码</label><input id="sz-sql-mi-ma" type="password" placeholder="留空 = 不修改"></div>
+          <div class="sz-hang"><label>数据库名</label><input id="sz-sql-shu-ju-ku" placeholder="WenDangKu"></div>
+        </div>
+        <div class="sz-hang"><label></label>
+          <button class="an-niu" onclick="sz_db_ce_shi('app', this)">🔌 测试应用库</button>
+          <span id="sz-db-jie-guo" class="sz-jie-guo"></span>
+        </div>
+        <div class="sz-ti-shi">切换数据库需要重启服务，并全量重建一次索引；SQLite 文件不存在会自动创建。</div>
+      </div>
+
+      <div class="sz-kuai">
+        <h4>📋 考核数据库（可选，只读）</h4>
+        <div class="sz-hang"><label>启用</label>
+          <label class="sz-check"><input type="checkbox" id="sz-kao-he-kai-qi" onchange="sz_qie_huan_kao_he()"> 启用考核查询</label>
+        </div>
+        <div id="sz-kao-he-kuai">
+          <div class="sz-hang"><label>服务器</label><input id="sz-kao-he-sql-server" placeholder="127.0.0.1,1433"></div>
+          <div class="sz-hang"><label>用户名</label><input id="sz-kao-he-yong-hu" placeholder="sa"></div>
+          <div class="sz-hang"><label>密码</label><input id="sz-kao-he-mi-ma" type="password" placeholder="留空 = 不修改"></div>
+          <div class="sz-hang"><label>数据库名</label><input id="sz-kao-he-shu-ju-ku" placeholder="assessment_db"></div>
+          <div class="sz-hang"><label>表名</label><input id="sz-kao-he-biao" placeholder="考核记录"></div>
+          <div class="sz-hang"><label></label>
+            <button class="an-niu" onclick="sz_db_ce_shi('kaohe', this)">🔌 测试考核库</button>
+            <span id="sz-kao-he-jie-guo" class="sz-jie-guo"></span>
+          </div>
+        </div>
+        <div class="sz-ti-shi">表结构需包含检查时间、检查内容、条例大类、责任班组等字段，详见 README。</div>
+      </div>
+
+      <div class="sz-kuai">
+        <h4>🤖 DeepSeek</h4>
+        <div class="sz-hang"><label>API Key</label>
+          <input id="sz-key" type="password" placeholder="留空 = 不修改（只显示打码）">
+        </div>
+        <div class="sz-hang"><label>接口地址</label>
+          <input id="sz-deepseek-url" placeholder="https://api.deepseek.com">
+        </div>
+        <div class="sz-hang"><label>使用的模型</label>
+          <input id="sz-mo-xing" list="sz-mo-xing-liebiao" placeholder="deepseek-chat">
+          <datalist id="sz-mo-xing-liebiao"></datalist>
+        </div>
+        <div class="sz-hang"><label></label>
+          <button class="an-niu" onclick="sz_ce_shi(this)">🔌 测试 DeepSeek</button>
+          <span id="sz-jie-guo" class="sz-jie-guo"></span>
+        </div>
+        <div class="sz-ti-shi">测试使用当前已保存的 Key；填了新 Key 请先保存再测。</div>
+      </div>
+
+      <div class="sz-kuai">
+        <h4>🔌 服务 / MCP</h4>
+        <div class="sz-hang"><label>监听地址</label><input id="sz-fu-wu-host" placeholder="127.0.0.1"></div>
+        <div class="sz-hang"><label>服务端口</label><input id="sz-fu-wu-duan-kou" type="number" min="1" max="65535"></div>
+        <div class="sz-hang"><label>MCP</label>
+          <label class="sz-check"><input type="checkbox" id="sz-mcp-kai-qi"> 启用 MCP HTTP</label>
+        </div>
+        <div class="sz-hang"><label>MCP 端口</label><input id="sz-mcp-duan-kou" type="number" min="1" max="65535"></div>
+        <div class="sz-ti-shi">改监听地址/端口/MCP 需要重启服务。</div>
+      </div>
+
+      <div class="an-niu-lan">
+        <span style="flex:1"></span>
+        <button class="an-niu" onclick="guan_bi_sz_tan()">取消</button>
+        <button class="an-niu zhu-yao" onclick="sz_bao_cun(this)">✓ 保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 提示词设置弹窗 ============ -->
+  <div id="ti-shi-tan" class="tan-chuang-zhao yin-cang">
+    <div class="tan-chuang" style="width:780px">
+      <h3>✍ 提示词设置（命名 / 标签）</h3>
+      <div class="yuan-ming">
+        改完点保存立即生效。影响：收件箱归档建议、批量 AI 处理、单文件重命名、标签生成。<br>
+        可用占位符：<code>{jin_tian}</code> 自动换成今天的日期，<code>{ci_hui}</code> 自动换成标签参考词库。
+      </div>
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi);display:block;margin-bottom:4px">命名规则提示词</label>
+      <textarea id="ts-ming" rows="9" class="ts-wen-ben" spellcheck="false"></textarea>
+      <div style="margin:4px 0 12px;display:flex;align-items:center;gap:10px">
+        <button class="an-niu" onclick="ts_hui_fu('ming')">恢复默认</button>
+        <span id="ts-ming-zhuang" style="font-size:12px;color:var(--ci-yao-wen-zi)"></span>
+      </div>
+      <label style="font-size:12px;color:var(--ci-yao-wen-zi);display:block;margin-bottom:4px">标签规则提示词</label>
+      <textarea id="ts-biao" rows="7" class="ts-wen-ben" spellcheck="false"></textarea>
+      <div style="margin:4px 0 4px;display:flex;align-items:center;gap:10px">
+        <button class="an-niu" onclick="ts_hui_fu('biao')">恢复默认</button>
+        <span id="ts-biao-zhuang" style="font-size:12px;color:var(--ci-yao-wen-zi)"></span>
+      </div>
+      <div class="an-niu-lan">
+        <span style="flex:1"></span>
+        <button class="an-niu" onclick="guan_bi_ts_tan()">取消</button>
+        <button class="an-niu zhu-yao" onclick="ts_bao_cun(this)">✓ 保存</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================
+ * 全局状态
+ * ===================================================== */
+let dang_qian_ye = "sou-suo"
+let sou_suo_ding_shi = null
+let jian_yi_huan_cun = {}   // path -> {wen_jian_ming, nian_fen, zhai_yao, biao_qian}
+let biao_qian_ci_hui = []
+let shou_jian_xiang_lu_jing = ""
+
+/* =====================================================
+ * 通用请求
+ * ===================================================== */
+async function qing_qiu(url, options) {
+  const r = await fetch(url, options)
+  return await r.json()
+}
+
+function ge_zi(bai_fen) {
+  return (bai_fen * 100).toFixed(1) + "%"
+}
+
+/* 全局"处理中"遮罩：批量执行等耗时操作期间锁住页面，防止误操作 */
+function xian_shi_mang(wen) {
+  document.getElementById("mang-wen-zi").textContent = wen || "处理中，请稍候…"
+  document.getElementById("mang-zhe").classList.remove("yin-cang")
+}
+function yin_cang_mang() {
+  document.getElementById("mang-zhe").classList.add("yin-cang")
+}
+
+/* 弹窗保存后刷新当前页面：搜索页重搜 / 浏览页重载 / 状态卡更新（三处弹窗共用） */
+function shua_xin_dang_qian() {
+  if (dang_qian_ye === "sou-suo") zhi_xing_sou_suo()
+  else if (dang_qian_ye === "liu-lan") jia_zai_liu_lan()
+  jia_zai_zhuang_tai()
+}
+
+/* =====================================================
+ * 标签页切换
+ * ===================================================== */
+function qie_huan(ye) {
+  dang_qian_ye = ye
+  const ye_mian = ["sou-suo", "liu-lan", "ti-jian", "shou-jian-xiang", "suo-yin", "kao-he"]
+  ye_mian.forEach(y => {
+    document.getElementById("ye-" + y).classList.toggle("yin-cang", y !== ye)
+    document.getElementById("bt-" + y).classList.toggle("dang-qian", y === ye)
+  })
+  if (ye === "shou-jian-xiang") jia_zai_shou_jian_xiang()
+  if (ye === "liu-lan") jia_zai_liu_lan()
+  if (ye === "ti-jian") jia_zai_tj_fan_wei()
+  if (ye === "kao-he" && !kh_yi_jia_zai) kh_chu_shi()
+  if (ye === "sou-suo") document.getElementById("sou-suo-ci").focus()
+}
+
+/* =====================================================
+ * 状态卡片
+ * ===================================================== */
+async function jia_zai_zhuang_tai() {
+  try {
+    const z = await qing_qiu("/api/xi_tong/zhuang_tai")
+    shou_jian_xiang_lu_jing = z.shou_jian_xiang || ""
+    document.getElementById("st-zong").textContent = z.wen_jian_zong_shu
+    document.getElementById("st-suo").textContent = z.yi_suo_yin_shu
+    document.getElementById("st-xiang").textContent = z.xiang_liang_shu
+    document.getElementById("st-zhai").textContent = z.you_zhai_yao_shu
+    document.getElementById("st-kuai").textContent = z.fen_kuai_shu ?? "-"
+    document.getElementById("fu-wu-xin-xi").textContent =
+      "管理目录：" + z.wen_dang_ku + (z.shu_ju_ku_ok ? "" : "（数据库连接失败！）")
+    // 图片识别通道状态：按 config 的通道分别提示（deepseek=云端接口，lm_studio=本地服务）
+    let lm_wen_zi = ""
+    if (z.tu_pian_shi_bie_kai_qi && !z.tu_pian_shi_bie_lian_tong) {
+      lm_wen_zi = z.tu_pian_shi_bie_qu_dao === "deepseek"
+        ? "　⚠ DeepSeek 接口不可用，图片命名将不结合内容（检查网络/余额）"
+        : "　⚠ 本地视觉模型（LM Studio）未连接，图片命名将不结合内容"
+    }
+    document.getElementById("fu-wu-xin-xi").textContent += lm_wen_zi
+  } catch (e) { /* 服务未起时会失败，静默 */ }
+}
+jia_zai_zhuang_tai()
+setInterval(jia_zai_zhuang_tai, 30000)
+
+/* =====================================================
+ * 模型设置（DeepSeek key / 模型，首页右上角入口）
+ * ===================================================== */
+async function da_kai_sz_tan() {
+  // 密码/Key 输入框留空：避免把打码值当成新值提交
+  ;["sz-key", "sz-sql-mi-ma", "sz-kao-he-mi-ma"].forEach(id => {
+    document.getElementById(id).value = ""
+  })
+  ;["sz-jie-guo", "sz-db-jie-guo", "sz-kao-he-jie-guo"].forEach(id => {
+    document.getElementById(id).textContent = ""
+  })
+  document.getElementById("she-zhi-tan").classList.remove("yin-cang")
+  try {
+    const r = await qing_qiu("/api/xi_tong/she_zhi")
+    document.getElementById("sz-dang-qian").textContent =
+      `台账库：${r.db_miao_shu || "-"}　考核库：${r.kao_he_miao_shu || "未启用"}　DeepSeek：${r.deepseek_key_da_ma || "未配置"}`
+    const set = (id, v) => { document.getElementById(id).value = v == null ? "" : v }
+    set("sz-wen-dang-ku", r.wen_dang_ku)
+    set("sz-db-lei-xing", r.db_lei_xing || "sqlite")
+    set("sz-sqlite-lu-jing", r.sqlite_lu_jing)
+    set("sz-sql-server", r.sql_server)
+    set("sz-sql-yong-hu", r.sql_yong_hu)
+    set("sz-sql-shu-ju-ku", r.sql_shu_ju_ku)
+    document.getElementById("sz-sql-mi-ma").placeholder =
+      r.sql_mi_ma_yi_peizhi ? "已配置，留空不修改" : "输入密码"
+    document.getElementById("sz-kao-he-kai-qi").checked = !!r.kao_he_kai_qi
+    set("sz-kao-he-sql-server", r.kao_he_sql_server)
+    set("sz-kao-he-yong-hu", r.kao_he_yong_hu)
+    set("sz-kao-he-shu-ju-ku", r.kao_he_shu_ju_ku)
+    set("sz-kao-he-biao", r.kao_he_biao)
+    document.getElementById("sz-kao-he-mi-ma").placeholder =
+      r.kao_he_mi_ma_yi_peizhi ? "已配置，留空不修改" : "输入密码"
+    set("sz-deepseek-url", r.deepseek_url)
+    set("sz-mo-xing", r.deepseek_mo_xing)
+    document.getElementById("sz-mo-xing-liebiao").innerHTML =
+      (r.ke_xuan_mo_xing || []).map(m => `<option value="${escapeHtml(m)}">`).join("")
+    document.getElementById("sz-mcp-kai-qi").checked = !!r.mcp_http_kai_qi
+    set("sz-mcp-duan-kou", r.mcp_http_duan_kou)
+    set("sz-fu-wu-host", r.fu_wu_host)
+    set("sz-fu-wu-duan-kou", r.fu_wu_duan_kou)
+  } catch (e) {
+    document.getElementById("sz-dang-qian").textContent = "读取设置失败：" + e
+  }
+  sz_qie_huan_db()
+  sz_qie_huan_kao_he()
+}
+
+function _sz_zhi(id) { return document.getElementById(id).value.trim() }
+
+function sz_qie_huan_db() {
+  const lei = document.getElementById("sz-db-lei-xing").value
+  document.getElementById("sz-sqlite-kuai").style.display = lei === "sqlite" ? "" : "none"
+  document.getElementById("sz-mssql-kuai").style.display = lei === "mssql" ? "" : "none"
+}
+
+function sz_qie_huan_kao_he() {
+  document.getElementById("sz-kao-he-kuai").style.display =
+    document.getElementById("sz-kao-he-kai-qi").checked ? "" : "none"
+}
+
+function guan_bi_sz_tan() {
+  document.getElementById("she-zhi-tan").classList.add("yin-cang")
+}
+
+/* 测试数据库连接（应用库 / 考核库） */
+async function sz_db_ce_shi(lei, an_niu) {
+  const kuang = document.getElementById(lei === "app" ? "sz-db-jie-guo" : "sz-kao-he-jie-guo")
+  kuang.textContent = "测试中…"
+  kuang.style.color = "var(--ci-yao-wen-zi)"
+  an_niu.disabled = true
+  const body = lei === "app"
+    ? {
+        lei_xing: _sz_zhi("sz-db-lei-xing"),
+        sqlite_lu_jing: _sz_zhi("sz-sqlite-lu-jing"),
+        sql_server: _sz_zhi("sz-sql-server"),
+        sql_yong_hu: _sz_zhi("sz-sql-yong-hu"),
+        sql_mi_ma: _sz_zhi("sz-sql-mi-ma"),
+        sql_shu_ju_ku: _sz_zhi("sz-sql-shu-ju-ku"),
+        kao_he: false
+      }
+    : {
+        lei_xing: "mssql",
+        sql_server: _sz_zhi("sz-kao-he-sql-server"),
+        sql_yong_hu: _sz_zhi("sz-kao-he-yong-hu"),
+        sql_mi_ma: _sz_zhi("sz-kao-he-mi-ma"),
+        sql_shu_ju_ku: _sz_zhi("sz-kao-he-shu-ju-ku"),
+        biao: _sz_zhi("sz-kao-he-biao"),
+        kao_he: true
+      }
+  try {
+    const r = await qing_qiu("/api/xi_tong/db_ce_shi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    })
+    kuang.textContent = (r.ok ? "✓ " : "✗ ") + (r.xin_xi || "")
+    kuang.style.color = r.ok ? "var(--cheng-gong)" : "var(--cuo-wu)"
+  } catch (e) {
+    kuang.textContent = "测试出错：" + e
+    kuang.style.color = "var(--cuo-wu)"
+  }
+  an_niu.disabled = false
+}
+
+/* 用当前生效的 key 探测 DeepSeek 接口（不花 token） */
+async function sz_ce_shi(an_niu) {
+  an_niu.disabled = true
+  an_niu.textContent = "测试中…"
+  const kuang = document.getElementById("sz-jie-guo")
+  try {
+    const r = await qing_qiu("/api/xi_tong/she_zhi_ce_shi")
+    kuang.textContent = (r.ok ? "✓ " : "✗ ") + (r.xin_xi || "")
+    kuang.style.color = r.ok ? "var(--cheng-gong)" : "var(--cuo-wu)"
+  } catch (e) {
+    kuang.textContent = "测试出错：" + e
+    kuang.style.color = "var(--cuo-wu)"
+  }
+  an_niu.disabled = false
+  an_niu.textContent = "🔌 测试 DeepSeek"
+}
+
+async function sz_bao_cun(an_niu) {
+  an_niu.disabled = true
+  an_niu.textContent = "保存中…"
+  const body = {
+    wen_dang_ku: _sz_zhi("sz-wen-dang-ku"),
+    db_lei_xing: _sz_zhi("sz-db-lei-xing"),
+    sqlite_lu_jing: _sz_zhi("sz-sqlite-lu-jing"),
+    sql_server: _sz_zhi("sz-sql-server"),
+    sql_yong_hu: _sz_zhi("sz-sql-yong-hu"),
+    sql_mi_ma: _sz_zhi("sz-sql-mi-ma"),
+    sql_shu_ju_ku: _sz_zhi("sz-sql-shu-ju-ku"),
+    kao_he_kai_qi: document.getElementById("sz-kao-he-kai-qi").checked,
+    kao_he_sql_server: _sz_zhi("sz-kao-he-sql-server"),
+    kao_he_yong_hu: _sz_zhi("sz-kao-he-yong-hu"),
+    kao_he_mi_ma: _sz_zhi("sz-kao-he-mi-ma"),
+    kao_he_shu_ju_ku: _sz_zhi("sz-kao-he-shu-ju-ku"),
+    kao_he_biao: _sz_zhi("sz-kao-he-biao"),
+    deepseek_key: _sz_zhi("sz-key"),
+    deepseek_url: _sz_zhi("sz-deepseek-url"),
+    deepseek_mo_xing: _sz_zhi("sz-mo-xing"),
+    mcp_http_kai_qi: document.getElementById("sz-mcp-kai-qi").checked,
+    mcp_http_duan_kou: _sz_zhi("sz-mcp-duan-kou"),
+    fu_wu_host: _sz_zhi("sz-fu-wu-host"),
+    fu_wu_duan_kou: _sz_zhi("sz-fu-wu-duan-kou")
+  }
+  try {
+    const r = await qing_qiu("/api/xi_tong/she_zhi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    })
+    if (r.ok) {
+      document.getElementById("sz-dang-qian").textContent =
+        `台账库：${r.db_miao_shu || "-"}　考核库：${r.kao_he_miao_shu || "未启用"}　DeepSeek：${r.deepseek_key_da_ma || "未配置"}`
+      document.getElementById("sz-key").value = ""
+      document.getElementById("sz-sql-mi-ma").value = ""
+      document.getElementById("sz-kao-he-mi-ma").value = ""
+      let ti_shi = r.xin_xi || "已保存"
+      if (r.xu_yao_chong_qi) ti_shi += "；部分设置需要重启服务后生效"
+      alert(ti_shi)
+      jia_zai_zhuang_tai()
+    } else {
+      alert("保存失败：" + (r.xin_xi || ""))
+    }
+  } catch (e) {
+    alert("保存出错：" + e)
+  }
+  an_niu.disabled = false
+  an_niu.textContent = "✓ 保存"
+}
+
+/* =====================================================
+ * 提示词设置（命名 / 标签；改完立即生效）
+ * ===================================================== */
+let ts_mo_ren = { ming: "", biao: "" }
+
+async function da_kai_ts_tan() {
+  try {
+    const r = await qing_qiu("/api/xi_tong/she_zhi")
+    ts_mo_ren.ming = r.ti_shi_ming_ming_mo_ren || ""
+    ts_mo_ren.biao = r.ti_shi_biao_qian_mo_ren || ""
+    document.getElementById("ts-ming").value = r.ti_shi_ming_ming || ""
+    document.getElementById("ts-biao").value = r.ti_shi_biao_qian || ""
+    document.getElementById("ts-ming-zhuang").textContent =
+      (r.ti_shi_ming_ming !== ts_mo_ren.ming) ? "（已自定义）" : "（当前为默认）"
+    document.getElementById("ts-biao-zhuang").textContent =
+      (r.ti_shi_biao_qian !== ts_mo_ren.biao) ? "（已自定义）" : "（当前为默认）"
+  } catch (e) { /* 服务未起时静默 */ }
+  document.getElementById("ti-shi-tan").classList.remove("yin-cang")
+}
+
+function guan_bi_ts_tan() {
+  document.getElementById("ti-shi-tan").classList.add("yin-cang")
+}
+
+/* 恢复默认只填回文本框，点保存才真正生效 */
+function ts_hui_fu(na_ge) {
+  if (na_ge === "ming") document.getElementById("ts-ming").value = ts_mo_ren.ming
+  else document.getElementById("ts-biao").value = ts_mo_ren.biao
+}
+
+async function ts_bao_cun(an_niu) {
+  an_niu.disabled = true
+  an_niu.textContent = "保存中…"
+  try {
+    const r = await qing_qiu("/api/xi_tong/she_zhi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ti_shi_ming_ming: document.getElementById("ts-ming").value,
+        ti_shi_biao_qian: document.getElementById("ts-biao").value
+      })
+    })
+    if (r.ok) {
+      alert(r.xin_xi || "已保存")
+      guan_bi_ts_tan()
+    } else {
+      alert("保存失败：" + (r.xin_xi || ""))
+    }
+  } catch (e) {
+    alert("保存出错：" + e)
+  }
+  an_niu.disabled = false
+  an_niu.textContent = "✓ 保存"
+}
+
+/* =====================================================
+ * 搜索
+ * ===================================================== */
+function huo_qu_mo_shi() {
+  return document.querySelector('input[name="mo-shi"]:checked').value
+}
+
+function sou_suo_yan_chi() {
+  clearTimeout(sou_suo_ding_shi)
+  sou_suo_ding_shi = setTimeout(zhi_xing_sou_suo, 300)
+}
+
+async function zhi_xing_sou_suo() {
+  const ci = document.getElementById("sou-suo-ci").value.trim()
+  const he = document.getElementById("sou-suo-jie-guo")
+  const gong_ju_lan = document.getElementById("sou-suo-gong-ju-lan")
+  if (!ci) { he.innerHTML = ""; document.getElementById("jie-guo-shu").textContent = ""; gong_ju_lan.style.display = "none"; return }
+  const mo_shi = huo_qu_mo_shi()
+  const can_shu = new URLSearchParams({ q: ci })
+  const lei = document.getElementById("ss-wen-zhong").value
+  if (lei) can_shu.set("wen_zhong", lei)
+  const nian = document.getElementById("ss-nian-fen").value
+  if (nian) can_shu.set("nian_fen", nian)
+  const url = (mo_shi === "yu-yi" ? "/api/sousuo/yu_yi?" : "/api/sousuo/ming_cheng?")
+    + can_shu.toString()
+  try {
+    const jie_guo = await qing_qiu(url)
+    document.getElementById("jie-guo-shu").textContent = "找到 " + jie_guo.length + " 个结果" +
+      (mo_shi === "yu-yi" ? "（语义匹配度排序）" : "")
+    gong_ju_lan.style.display = jie_guo.length ? "flex" : "none"
+    document.getElementById("ss-quan-xuan").checked = false
+    he.innerHTML = jie_guo.map(f => {
+      const xiang_si = typeof f.xiang_si_du === "number"
+        ? `<span class="xiang-si">匹配度 ${(f.xiang_si_du * 100).toFixed(0)}%</span>` : ""
+      const zhai_yao = f.zhai_yao ? `<div class="zhai-yao">💡 ${escapeHtml(f.zhai_yao)}</div>` : ""
+      const pian_duan = f.pian_duan
+        ? `<div class="zhai-yao" style="color:var(--ci-yao-wen-zi)">📄 相关片段：${escapeHtml(f.pian_duan.replace(/\n/g, " ").slice(0, 160))}</div>` : ""
+      const tiao_kuan = f.tiao_kuan
+        ? `<div class="zhai-yao" style="color:var(--cheng-gong)">📌 命中条款：${escapeHtml(f.tiao_kuan)}</div>` : ""
+      const wen_zhong = f.wen_zhong
+        ? `<span class="xiang-si" style="color:var(--zhu-se)">${escapeHtml(f.wen_zhong)}</span>` : ""
+      const zuo_fei = f.you_xiao === "作废"
+        ? `<span class="xiang-si" style="color:var(--cuo-wu)">已作废</span>` : ""
+      const ban_ben = f.chong_fu_ban_ben
+        ? ""
+        : (f.zui_xin_ban === false
+          ? `<span class="xiang-si" style="color:var(--jing-gao)">⚠旧版</span>`
+          : (f.ban_ben_shu > 1 ? `<span class="xiang-si" style="color:var(--cheng-gong)">最新版</span>` : ""))
+      const chong_fu = f.chong_fu_ban_ben
+        ? `<span class="xiang-si" style="color:var(--jing-gao)">已去重</span>` : ""
+      const biao_qian = f.biao_qian
+        ? `<div class="zhai-yao" style="color:var(--cheng-gong)">🏷 标签：${escapeHtml(f.biao_qian.replace(/,/g, "，"))}</div>` : ""
+      const gui_kou = f.qi_ta_gui_kou
+        ? `<div class="zhai-yao" style="color:var(--jing-gao)">🏷 其他归口：${escapeHtml(f.qi_ta_gui_kou.replace(/;/g, "；"))}</div>` : ""
+      const bu_cun_zai = f.wen_jian_cun_zai === false
+      const cun_zai = bu_cun_zai ? `<span class="xiang-si" style="color:var(--cuo-wu)">文件已移动</span>` : ""
+      // 文件还在磁盘上才给勾选框和操作按钮；已失效的记录去"完整性检查"里清理
+      const gou_xuan = bu_cun_zai ? "" : `<input type="checkbox" class="ss-xuan" value="${escapeHtml(f.abs_lu_jing)}" style="flex-shrink:0">`
+      const cao_zuo = bu_cun_zai ? "" : `
+        <button class="an-niu" onclick="da_kai('${jsQ(f.abs_lu_jing)}','file')">打开</button>
+        <button class="an-niu" onclick="da_kai('${jsQ(f.abs_lu_jing)}','folder')">所在文件夹</button>
+        <button class="an-niu" onclick="da_kai_zm_tan('${jsQ(f.abs_lu_jing)}')">重命名</button>
+        <button class="an-niu" onclick="da_kai_bq_tan('${jsQ(f.abs_lu_jing)}', '${jsQ(f.biao_qian || "")}', '${jsQ(f.zhai_yao || "")}')">🏷 标签</button>
+        <button class="an-niu" style="color:var(--cuo-wu);border-color:#7f1d1d" onclick="shan_chu_wen_jian('${jsQ(f.abs_lu_jing)}', this)">删除</button>`
+      return `<div class="tiao-mu">
+        ${gou_xuan}
+        <div class="xin-xi">
+          <div class="ming">${escapeHtml(f.ming)}</div>
+          <div class="lu-jing">${escapeHtml(f.xiang_dui_lu_jing)}</div>
+          ${zhai_yao}${pian_duan}${tiao_kuan}${biao_qian}${gui_kou}
+        </div>
+        ${cun_zai}${wen_zhong}${zuo_fei}${ban_ben}${chong_fu}${xiang_si}${cao_zuo}
+      </div>`
+    }).join("") || `<div class="kong-bai">没有找到相关文件</div>`
+  } catch (e) {
+    he.innerHTML = `<div class="kong-bai">搜索出错：${escapeHtml(String(e))}</div>`
+  }
+}
+
+function da_kai(lu_jing, mo_shi) {
+  qing_qiu("/api/sousuo/da_kai", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: lu_jing, mode: mo_shi })
+  })
+}
+
+/* 搜索页：勾选与批量操作（批量处理逻辑与浏览页共用 pi_liang_fen_xi） */
+function ss_xuan_zhong() {
+  return [...document.querySelectorAll(".ss-xuan:checked")].map(c => c.value)
+}
+function ss_quan_xuan() {
+  const quan = document.getElementById("ss-quan-xuan").checked
+  document.querySelectorAll(".ss-xuan").forEach(c => { c.checked = quan })
+}
+function ss_pi_liang_fen_xi() {
+  pi_liang_fen_xi(ss_xuan_zhong(), "ss-pi-liang-mian-ban", zhi_xing_sou_suo)
+}
+async function ss_pi_liang_shan_chu() {
+  const paths = ss_xuan_zhong()
+  if (paths.length === 0) { alert("先勾选要删除的文件"); return }
+  if (!confirm(`确定删除选中的 ${paths.length} 个文件？\n\n文件都会移入 文档库\\99-回收站（可从那里找回），\n对应的向量索引和台账记录会同步清理。`)) return
+  xian_shi_mang(`正在删除 ${paths.length} 个文件…`)
+  let r
+  try {
+    r = await qing_qiu("/api/wen_jian/pi_liang_shan_chu", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paths: paths })
+    })
+  } finally {
+    yin_cang_mang()
+  }
+  if (!r.ok) { alert("删除失败：" + (r.cuo_wu || "")); return }
+  const bai = r.shi_bai.length ? `\n失败 ${r.shi_bai.length} 条：\n${r.shi_bai.slice(0, 10).join("\n")}` : ""
+  alert(`删除完成：成功 ${r.cheng_gong} 条${bai}`)
+  zhi_xing_sou_suo()
+  jia_zai_zhuang_tai()
+}
+
+/* 删除文件：移入回收站 + 后端同步清向量和数据库台账 */
+async function shan_chu_wen_jian(lu_jing, an_niu) {
+  if (!confirm("确定删除该文件？\n\n文件会移入 文档库\\99-回收站（可从那里找回），\n对应的向量索引和台账记录会同步清理。")) return
+  an_niu.disabled = true
+  an_niu.textContent = "删除中…"
+  try {
+    const r = await qing_qiu("/api/wen_jian/shan_chu", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: lu_jing })
+    })
+    if (r.ok) {
+      zhi_xing_sou_suo()      // 刷新当前搜索结果
+      jia_zai_zhuang_tai()    // 刷新状态卡片
+    } else {
+      alert("删除失败：" + (r.cuo_wu || ""))
+      an_niu.disabled = false
+      an_niu.textContent = "删除"
+    }
+  } catch (e) {
+    alert("删除出错：" + e)
+    an_niu.disabled = false
+    an_niu.textContent = "删除"
+  }
+}
+
+/* =====================================================
+ * 收件箱
+ * ===================================================== */
+async function jia_zai_shou_jian_xiang() {
+  if (biao_qian_ci_hui.length === 0) {
+    biao_qian_ci_hui = await qing_qiu("/api/shou_jian_xiang/biao_qian_ci_hui")
+  }
+  // 把服务端批量命名的已完成结果并入缓存（刷新页面后也能看到之前批量的建议）
+  try {
+    const pj = await qing_qiu("/api/shou_jian_xiang/pi_liang_jin_du")
+    for (const [lu_jing, jian_yi] of Object.entries(pj.jie_guo || {})) {
+      if (jian_yi.ok && !jian_yi_huan_cun[lu_jing]) jian_yi_huan_cun[lu_jing] = jian_yi
+    }
+  } catch (e) { /* 服务未起时静默 */ }
+  const files = await qing_qiu("/api/shou_jian_xiang/lie_biao")
+  const he = document.getElementById("shou-jian-xiang-lie-biao")
+  document.getElementById("shou-jian-xiang-lu-jing").textContent =
+    shou_jian_xiang_lu_jing || "（路径加载中）"
+  if (files.length === 0) {
+    he.innerHTML = `<div class="kong-bai">收件箱是空的，丢点文件进来试试</div>`
+    return
+  }
+  const ci_hui = `<datalist id="biao-qian-ci-hui">${biao_qian_ci_hui.map(c => `<option value="${escapeHtml(c)}">`).join("")}</datalist>`
+  he.innerHTML = ci_hui + files.map(f => {
+    const huan_cun = jian_yi_huan_cun[f.abs_lu_jing]
+    return `<div class="tiao-mu" style="align-items:flex-start">
+      <input type="checkbox" class="sjx-xuan" value="${escapeHtml(f.abs_lu_jing)}" style="flex-shrink:0;margin-top:4px" title="勾选后可批量命名/归档">
+      <div class="xin-xi" style="flex:1">
+        <div class="ming">${escapeHtml(f.ming)}</div>
+        <div class="lu-jing">${f.ri_qi} · ${formatSize(f.da_xiao)}</div>
+        ${huan_cun ? bian_ji_qu(f) : ""}
+      </div>
+      ${huan_cun
+        ? `<button class="an-niu zhu-yao" onclick="que_ren_gui_dang('${jsQ(f.abs_lu_jing)}')">✓ 确认归档</button>`
+        : `<button class="an-niu zhu-yao" onclick="ai_ming_ming('${jsQ(f.abs_lu_jing)}', this)">✨ AI 命名</button>`}
+    </div>`
+  }).join("")
+}
+
+/* 收件箱：取勾选的文件路径 */
+function sjx_xuan_zhong() {
+  return Array.from(document.querySelectorAll(".sjx-xuan:checked")).map(x => x.value)
+}
+function sjx_quan_xuan() {
+  const quan = document.getElementById("sjx-quan-xuan").checked
+  document.querySelectorAll(".sjx-xuan").forEach(x => { x.checked = quan })
+}
+
+function bian_ji_qu(f) {
+  const huan_cun = jian_yi_huan_cun[f.abs_lu_jing]
+  const biao_ji = huan_cun.shi_yong_ai
+    ? `<span class="ai-biao-ji">DeepSeek</span>`
+    : `<span class="ai-biao-ji hui-tui">规则命名（AI不可用）</span>`
+  const yu_lan = huan_cun.nei_rong_yu_lan
+    ? `<div class="nei-rong-yu-lan">内容预览：${escapeHtml(huan_cun.nei_rong_yu_lan)}</div>` : ""
+  // 图片识别失败：名字不是按图片内容起的，必须醒目提醒
+  const tu_pian_jing_gao = huan_cun.tu_pian_shi_bai
+    ? `<div class="nei-rong-yu-lan" style="color:#f59e0b">⚠ ${escapeHtml(huan_cun.tu_pian_shi_bai)}，此名字未结合图片内容</div>` : ""
+  return `<div class="gui-dang-bian-ji">
+    <div class="quan-bu">${biao_ji}</div>
+    <div>
+      <label>新文件名（年份按文件名里的日期自动归）</label>
+      <input value="${escapeHtml(huan_cun.wen_jian_ming)}"
+        oninput="geng_xin_ming_he_nian('${jsQ(f.abs_lu_jing)}', this)">
+    </div>
+    <div>
+      <label>归档年份</label>
+      <input class="nian-fen" value="${escapeHtml(huan_cun.nian_fen || "")}" readonly
+        style="width:100%;padding:8px 10px;background:#0f172a;border:1px solid var(--bian-kuang);border-radius:6px;color:var(--ci-yao-wen-zi);font-size:13px;outline:none">
+    </div>
+    <div class="quan-bu">
+      <label>标签（逗号分隔，归档后用于搜索和归类）</label>
+      <input value="${escapeHtml(huan_cun.biao_qian || "")}" list="biao-qian-ci-hui"
+        onchange="geng_xin_huan_cun('${jsQ(f.abs_lu_jing)}','biao_qian',this.value)">
+    </div>
+    <div class="quan-bu">
+      <label>摘要（自动带出，可改）</label>
+      <input value="${escapeHtml(huan_cun.zhai_yao || "")}"
+        onchange="geng_xin_huan_cun('${jsQ(f.abs_lu_jing)}','zhai_yao',this.value)">
+    </div>
+    ${tu_pian_jing_gao}
+    ${yu_lan}
+  </div>`
+}
+
+function geng_xin_huan_cun(lu_jing, zi_duan, zhi) {
+  if (jian_yi_huan_cun[lu_jing]) jian_yi_huan_cun[lu_jing][zi_duan] = zhi
+}
+
+/* 编辑文件名时同步更新归档年份（年份从文件名里的 8 位日期取，改日期则年份跟着变） */
+function geng_xin_ming_he_nian(lu_jing, shu_ru) {
+  const huan_cun = jian_yi_huan_cun[lu_jing]
+  if (!huan_cun) return
+  huan_cun.wen_jian_ming = shu_ru.value
+  const m = shu_ru.value.match(/20\d{6}/)
+  if (m) huan_cun.nian_fen = m[0].slice(0, 4)
+  const hang = shu_ru.closest(".gui-dang-bian-ji")
+  const nian_kuang = hang && hang.querySelector(".nian-fen")
+  if (nian_kuang) nian_kuang.value = huan_cun.nian_fen || ""
+}
+
+async function ai_ming_ming(lu_jing, an_niu) {
+  an_niu.disabled = true
+  an_niu.textContent = "分析中…"
+  try {
+    const jian_yi = await qing_qiu("/api/shou_jian_xiang/jian_yi?path=" + encodeURIComponent(lu_jing))
+    if (jian_yi.ok) {
+      jian_yi_huan_cun[lu_jing] = jian_yi
+      await jia_zai_shou_jian_xiang()
+    } else {
+      alert("分析失败：" + (jian_yi.cuo_wu || ""))
+      an_niu.disabled = false
+      an_niu.textContent = "✨ AI 命名"
+    }
+  } catch (e) {
+    alert("分析出错：" + e)
+    an_niu.disabled = false
+    an_niu.textContent = "✨ AI 命名"
+  }
+}
+
+/* 批量 AI 命名：只对勾选的文件，后台逐个分析，前台每 2 秒轮询进度，结果逐条显示出来 */
+let sjx_pi_liang_ding_shi = null
+async function pi_liang_ai_ming_ming() {
+  const xuan = sjx_xuan_zhong()
+  if (!xuan.length) { alert("先勾选要命名的文件"); return }
+  if (!confirm(`将对勾选的 ${xuan.length} 个文件逐个 AI 分析命名\n（图片会调视觉模型识别，数量多要跑一阵）。开始？`)) return
+  const r = await qing_qiu("/api/shou_jian_xiang/pi_liang_jian_yi", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paths: xuan })
+  })
+  if (!r.ok) { alert("启动失败：" + (r.cuo_wu || "")); return }
+  sjx_pi_liang_lun_xun()
+}
+
+/* 批量归档：把勾选且已有命名建议的文件一键归档（建议可在编辑区先改好） */
+async function pi_liang_gui_dang() {
+  const xuan = sjx_xuan_zhong()
+  if (!xuan.length) { alert("先勾选要归档的文件"); return }
+  const items = [], wei_ming = []
+  for (const p of xuan) {
+    const jy = jian_yi_huan_cun[p]
+    if (jy && jy.ok && jy.wen_jian_ming) {
+      items.push({ path: p, wen_jian_ming: jy.wen_jian_ming,
+                   zhai_yao: jy.zhai_yao || "", biao_qian: jy.biao_qian || "" })
+    } else {
+      wei_ming.push(p.split(/[\\/]/).pop())
+    }
+  }
+  if (wei_ming.length) {
+    alert(`以下 ${wei_ming.length} 个文件还没有命名建议，请先"AI 命名"再归档：\n${wei_ming.slice(0, 10).join("\n")}`)
+    if (!items.length) return
+  }
+  if (!confirm(`将把 ${items.length} 个文件按建议命名归档到对应年份目录，确认？`)) return
+  xian_shi_mang("批量归档中…")
+  try {
+    const r = await qing_qiu("/api/shou_jian_xiang/pi_liang_gui_dang", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: items })
+    })
+    // 归档成功的从缓存清掉
+    for (const it of items) delete jian_yi_huan_cun[it.path]
+    await jia_zai_shou_jian_xiang()
+    jia_zai_zhuang_tai()
+    const bai = r.shi_bai || []
+    const shi_bai = bai.length ? `\n失败 ${bai.length} 条：\n${bai.slice(0, 10).join("\n")}` : ""
+    alert(`归档完成：成功 ${r.cheng_gong || 0} 条${shi_bai}`)
+  } catch (e) {
+    alert("批量归档出错：" + e)
+  }
+  yin_cang_mang()
+}
+
+async function sjx_pi_liang_lun_xun() {
+  clearTimeout(sjx_pi_liang_ding_shi)
+  const j = await qing_qiu("/api/shou_jian_xiang/pi_liang_jin_du")
+  const zhuang_tai = document.getElementById("sjx-pi-liang-zhuang-tai")
+  // 已完成的建议实时并入缓存并刷新列表，用户能看到名字逐条出现
+  let xin_zeng = 0
+  for (const [lu_jing, jian_yi] of Object.entries(j.jie_guo || {})) {
+    if (!jian_yi_huan_cun[lu_jing]) {
+      jian_yi_huan_cun[lu_jing] = jian_yi
+      xin_zeng++
+    }
+  }
+  if (xin_zeng) await jia_zai_shou_jian_xiang()
+  zhuang_tai.textContent = j.yun_xing_zhong
+    ? `批量命名中 ${j.wan_cheng}/${j.zong_shu}：${j.zui_hou_xin_xi}`
+    : (j.zong_shu ? `批量命名完成（共 ${j.zong_shu} 个），请逐个核对后归档` : "")
+  if (j.yun_xing_zhong) {
+    sjx_pi_liang_ding_shi = setTimeout(sjx_pi_liang_lun_xun, 2000)
+  }
+}
+
+async function que_ren_gui_dang(lu_jing) {
+  const huan_cun = jian_yi_huan_cun[lu_jing]
+  if (!huan_cun) return
+  const r = await qing_qiu("/api/shou_jian_xiang/gui_dang", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      path: lu_jing,
+      wen_jian_ming: huan_cun.wen_jian_ming,
+      zhai_yao: huan_cun.zhai_yao || "",
+      biao_qian: huan_yi_huan_cun_biao_qian(huan_cun)
+    })
+  })
+  if (r.ok) {
+    delete jian_yi_huan_cun[lu_jing]
+    await jia_zai_shou_jian_xiang()
+    jia_zai_zhuang_tai()
+  } else {
+    alert("归档失败：" + (r.cuo_wu || ""))
+  }
+}
+function huan_yi_huan_cun_biao_qian(h) { return h.biao_qian || "" }
+
+function da_kai_mu_lu() {
+  qing_qiu("/api/sousuo/da_kai", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: "00-收件箱", mode: "folder" })
+  })
+}
+
+/* =====================================================
+ * 浏览文档库（层级目录）
+ * ===================================================== */
+let liu_lan_dang_qian = ""      // 当前相对路径，"" = 根目录
+
+async function jia_zai_liu_lan(path) {
+  if (path !== undefined) liu_lan_dang_qian = path
+  try {
+    const d = await qing_qiu("/api/liu_lan/mu_lu?path=" + encodeURIComponent(liu_lan_dang_qian))
+    if (!d.ok) { document.getElementById("liu-lan-lie-biao").innerHTML = `<div class="kong-bai">${escapeHtml(d.cuo_wu)}</div>`; return }
+    // 面包屑
+    document.getElementById("liu-lan-mian-bao").innerHTML = d.mian_bao.map((m, i) =>
+      (i ? `<span class="fen-ge">/</span>` : "") +
+      `<a onclick="jia_zai_liu_lan('${jsQ(m.path)}')">${escapeHtml(m.ming)}</a>`
+    ).join("")
+    // 文件夹 + 文件
+    const jia = d.wen_jian_jia.map(m => {
+      const rel = (d.dang_qian ? d.dang_qian + "/" : "") + m
+      return `<div class="hang wen-jian-jia">
+        <span class="tu-biao2">📁</span>
+        <div class="xin-xi"><div class="ming2" onclick="jia_zai_liu_lan('${jsQ(rel)}')">${escapeHtml(m)}</div></div>
+        <button class="an-niu" style="color:var(--cuo-wu);border-color:#7f1d1d" onclick="shan_chu_mulu('${jsQ(rel)}', '${jsQ(m)}')">删除</button>
+      </div>`
+    })
+    const wen = d.wen_jian.map(f => {
+      const biao_qian_xian = f.biao_qian || f.zhai_yao
+        ? `<div class="fu-zhu" style="color:var(--cheng-gong)">🏷 ${escapeHtml((f.biao_qian || "").replace(/,/g, "，"))}${f.biao_qian && f.zhai_yao ? " ｜ " : ""}${f.zhai_yao ? "💡 " + escapeHtml(f.zhai_yao) : ""}</div>`
+        : ""
+      return `<div class="hang">
+        <input type="checkbox" class="ll-xuan" value="${escapeHtml(f.abs_lu_jing)}" style="flex-shrink:0" title="勾选后可批量删除">
+        <span class="tu-biao2">${tu_biao_kuo_zhan(f.kuo_zhan_ming)}</span>
+        <div class="xin-xi">
+          <div class="ming2" onclick="da_kai('${jsQ(f.abs_lu_jing)}','file')" title="点击打开文件">${escapeHtml(f.ming)}</div>
+          ${biao_qian_xian}
+        </div>
+        <span class="fu-zhu">${formatSize(f.da_xiao)} · ${f.ri_qi}</span>
+        <button class="an-niu" onclick="da_kai('${jsQ(f.abs_lu_jing)}','folder')">所在文件夹</button>
+        <button class="an-niu" onclick="da_kai_zm_tan('${jsQ(f.abs_lu_jing)}')">重命名</button>
+        <button class="an-niu" onclick="da_kai_bq_tan('${jsQ(f.abs_lu_jing)}', '${jsQ(f.biao_qian || "")}', '${jsQ(f.zhai_yao || "")}')">🏷 标签</button>
+        <button class="an-niu" style="color:var(--cuo-wu);border-color:#7f1d1d" onclick="shan_chu_wen_jian('${jsQ(f.abs_lu_jing)}', this).then(() => jia_zai_liu_lan())">删除</button>
+      </div>`
+    })
+    // 有文件时显示全选框
+    const quan_xuan = d.wen_jian.length
+      ? `<div class="hang" style="background:transparent;border-style:dashed">
+          <input type="checkbox" id="ll-quan-xuan" onchange="ll_quan_xuan()" style="flex-shrink:0">
+          <span class="fu-zhu">全选本目录 ${d.wen_jian.length} 个文件</span>
+        </div>` : ""
+    document.getElementById("liu-lan-lie-biao").innerHTML =
+      jia.concat(quan_xuan ? [quan_xuan] : []).concat(wen).join("") || `<div class="kong-bai">这个文件夹是空的</div>`
+  } catch (e) {
+    document.getElementById("liu-lan-lie-biao").innerHTML = `<div class="kong-bai">加载失败：${escapeHtml(String(e))}</div>`
+  }
+}
+
+function liu_lan_shang_yi_ji() {
+  if (!liu_lan_dang_qian) return
+  const i = liu_lan_dang_qian.lastIndexOf("/")
+  jia_zai_liu_lan(i < 0 ? "" : liu_lan_dang_qian.slice(0, i))
+}
+
+/* 浏览页：全选本目录文件 */
+function ll_quan_xuan() {
+  const quan = document.getElementById("ll-quan-xuan").checked
+  document.querySelectorAll(".ll-xuan").forEach(c => c.checked = quan)
+}
+
+/* 浏览页：删除文件夹（整个移入回收站，保留内部结构） */
+async function shan_chu_mulu(abs_path, ming) {
+  if (!confirm(`确定删除文件夹「${ming}」？\n\n里面的所有文件和子文件夹会整体移入 文档库\\99-回收站（可从那里找回，结构保留），\n对应的向量索引和台账记录会同步清理。`)) return
+  xian_shi_mang("正在删除文件夹…")
+  let r
+  try {
+    r = await qing_qiu("/api/wen_jian/shan_chu_mulu", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: abs_path })
+    })
+  } finally {
+    yin_cang_mang()
+  }
+  if (r.ok) {
+    alert(`已删除：${r.xin_xi}\n共清理 ${r.wen_jian_shu} 个文件的索引。`)
+    jia_zai_liu_lan()
+    jia_zai_zhuang_tai()
+  } else {
+    alert("删除失败：" + (r.cuo_wu || ""))
+  }
+}
+
+/* =====================================================
+ * 批量 AI 处理（命名+标签+摘要）——搜索页和浏览页共用
+ * 勾选文件 → 后台逐个分析 → 审阅面板（可逐条改）→ 三种方式应用
+ * ===================================================== */
+let plfx_ding_shi = null
+let plfx_jie_guo = {}      // path -> 分析结果
+let plfx_panel_id = ""     // 面板容器 id
+let plfx_shua_xin = null   // 应用完成后的刷新函数
+
+async function pi_liang_fen_xi(paths, panel_id, shua_xin) {
+  if (!paths.length) { alert("先勾选要处理的文件"); return }
+  if (!confirm(`将对勾选的 ${paths.length} 个文件逐个 AI 分析（生成 规范名+标签+摘要）\n` +
+    `（.doc/.xls 老格式会调本机 WPS 读内容，第一个可能要等十几秒）。开始？`)) return
+  plfx_panel_id = panel_id
+  plfx_shua_xin = shua_xin
+  plfx_jie_guo = {}
+  const r = await qing_qiu("/api/liu_lan/pi_liang_fen_xi", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paths: paths })
+  })
+  if (!r.ok) { alert("启动失败：" + (r.cuo_wu || "")); return }
+  const he = document.getElementById(panel_id)
+  he.style.display = "block"
+  he.innerHTML = `<div style="font-size:12px;color:var(--ci-yao-wen-zi)">AI 分析排队中…</div>`
+  plfx_lun_xun()
+}
+
+async function plfx_lun_xun() {
+  clearTimeout(plfx_ding_shi)
+  const j = await qing_qiu("/api/liu_lan/pi_liang_fen_xi_jin_du")
+  const he = document.getElementById(plfx_panel_id)
+  for (const [p, r] of Object.entries(j.jie_guo || {})) plfx_jie_guo[p] = r
+  if (j.yun_xing_zhong) {
+    he.innerHTML = `<div style="font-size:12px;color:var(--ci-yao-wen-zi)">AI 分析 ${j.wan_cheng}/${j.zong_shu}：${escapeHtml(j.zui_hou_xin_xi)}</div>`
+    plfx_ding_shi = setTimeout(plfx_lun_xun, 2000)
+    return
+  }
+  plfx_xuan_ran()
+}
+
+function plfx_xuan_ran() {
+  const he = document.getElementById(plfx_panel_id)
+  const hang = Object.entries(plfx_jie_guo).map(([p, r]) => {
+    if (!r.ok) {
+      return `<div class="hang" style="background:transparent"><span style="flex:1;color:var(--ci-yao-wen-zi)">✗ ${escapeHtml(p.split(/[\\/]/).pop())}：${escapeHtml(r.cuo_wu || "分析失败")}</span></div>`
+    }
+    const jing_gao = r.tu_pian_shi_bai ? `<span style="color:#f59e0b"> ⚠ ${escapeHtml(r.tu_pian_shi_bai)}</span>` : ""
+    const you_jian_yi = (r.ming !== r.yuan_ming) || r.biao_qian
+    return `<div class="hang plfx-hang" data-p="${escapeHtml(p)}" style="background:transparent;align-items:flex-start">
+      <input type="checkbox" class="plfx-xuan" ${you_jian_yi ? "checked" : ""} style="flex-shrink:0;margin-top:8px">
+      <div class="xin-xi" style="flex:1">
+        <div class="ming2">${escapeHtml(r.yuan_ming)}${r.shi_yong_ai ? "" : "（规则命名）"}${jing_gao}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+          <div><label style="font-size:11px;color:var(--ci-yao-wen-zi)">新文件名</label>
+            <input class="plfx-in plfx-ming" value="${escapeHtml(r.ming)}"></div>
+          <div><label style="font-size:11px;color:var(--ci-yao-wen-zi)">标签（逗号分隔）</label>
+            <input class="plfx-in plfx-biao" value="${escapeHtml(r.biao_qian || "")}" list="biao-qian-ci-hui"></div>
+          <div style="grid-column:1/-1"><label style="font-size:11px;color:var(--ci-yao-wen-zi)">摘要</label>
+            <input class="plfx-in plfx-zhai" value="${escapeHtml(r.zhai_yao || "")}"></div>
+        </div>
+      </div>
+    </div>`
+  }).join("")
+  const cheng_gong_shu = Object.values(plfx_jie_guo).filter(x => x.ok).length
+  he.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+      <strong>AI 分析完成（${cheng_gong_shu} 个成功）</strong>
+      <button class="an-niu zhu-yao" onclick="plfx_ying_yong('both')">✓ 应用选中项（改名+标签）</button>
+      <button class="an-niu" onclick="plfx_ying_yong('tags')">只改标签/摘要</button>
+      <button class="an-niu" onclick="plfx_ying_yong('name')">只改文件名</button>
+      <button class="an-niu" onclick="da_kai_ts_tan()" title="对名字/标签效果不满意时，在这里调整提示词">✍ 调整提示词</button>
+      <button class="an-niu" onclick="document.getElementById('${plfx_panel_id}').style.display='none'">收起</button>
+    </div>${hang}`
+}
+
+/* 审阅面板：把勾选的条目按选定方式应用（改名走服务端审核规范，向量自动重建） */
+async function plfx_ying_yong(mo_shi) {
+  const hang_lie = [...document.querySelectorAll("#" + plfx_panel_id + " .plfx-hang")]
+  const items = []
+  for (const hang of hang_lie) {
+    if (!hang.querySelector(".plfx-xuan").checked) continue
+    const it = { path: hang.dataset.p }
+    if (mo_shi !== "tags") it.xin_ming = hang.querySelector(".plfx-ming").value.trim()
+    if (mo_shi !== "name") {
+      it.biao_qian = hang.querySelector(".plfx-biao").value.trim()
+      it.zhai_yao = hang.querySelector(".plfx-zhai").value.trim()
+    }
+    items.push(it)
+  }
+  if (!items.length) { alert("没有勾选要应用的条目"); return }
+  const ming_ling = { both: "改名+标签", tags: "只改标签/摘要", name: "只改文件名" }[mo_shi]
+  if (!confirm(`将对 ${items.length} 个文件执行「${ming_ling}」，确认？`)) return
+  xian_shi_mang(`正在应用（${ming_ling}）…`)
+  let r
+  try {
+    r = await qing_qiu("/api/liu_lan/pi_liang_chu_li", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: items })
+    })
+  } finally {
+    yin_cang_mang()
+  }
+  const bai = (r.shi_bai || []).length ? `\n失败 ${r.shi_bai.length} 条：\n${r.shi_bai.slice(0, 10).join("\n")}` : ""
+  alert(`应用完成：成功 ${r.cheng_gong || 0} 条${bai}`)
+  document.getElementById(plfx_panel_id).style.display = "none"
+  if (plfx_shua_xin) plfx_shua_xin()
+  jia_zai_zhuang_tai()
+}
+
+/* 浏览页入口：批量 AI 处理选中的文件 */
+function ll_pi_liang_fen_xi() {
+  const paths = [...document.querySelectorAll(".ll-xuan:checked")].map(c => c.value)
+  pi_liang_fen_xi(paths, "ll-pi-liang-mian-ban", jia_zai_liu_lan)
+}
+
+/* 浏览页：批量删除选中的文件（移入回收站 + 清索引） */
+async function pi_liang_shan_chu() {  const paths = [...document.querySelectorAll(".ll-xuan:checked")].map(c => c.value)
+  if (paths.length === 0) { alert("先勾选要删除的文件（文件行的复选框）"); return }
+  if (!confirm(`确定删除选中的 ${paths.length} 个文件？\n\n文件都会移入 文档库\\99-回收站（可从那里找回），\n对应的向量索引和台账记录会同步清理。`)) return
+  xian_shi_mang(`正在删除 ${paths.length} 个文件…`)
+  let r
+  try {
+    r = await qing_qiu("/api/wen_jian/pi_liang_shan_chu", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paths: paths })
+    })
+  } finally {
+    yin_cang_mang()
+  }
+  if (!r.ok) { alert("删除失败：" + (r.cuo_wu || "")); return }
+  const shi_bai = r.shi_bai.length ? `\n失败 ${r.shi_bai.length} 条：\n${r.shi_bai.slice(0, 10).join("\n")}` : ""
+  alert(`删除完成：成功 ${r.cheng_gong} 条${shi_bai}`)
+  jia_zai_liu_lan()
+  jia_zai_zhuang_tai()
+}
+
+function da_kai_dang_qian_mu_lu() {
+  qing_qiu("/api/sousuo/da_kai", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: liu_lan_dang_qian || "", mode: "folder" })
+  })
+}
+
+function tu_biao_kuo_zhan(kz) {
+  if ([".docx", ".doc"].includes(kz)) return "📄"
+  if ([".xlsx", ".xls", ".xlsm", ".et"].includes(kz)) return "📊"
+  if ([".pptx", ".ppt"].includes(kz)) return "📽"
+  if ([".pdf"].includes(kz)) return "📕"
+  if ([".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"].includes(kz)) return "🖼"
+  if ([".mp4", ".avi", ".mkv", ".mov"].includes(kz)) return "🎬"
+  if ([".zip", ".rar", ".7z"].includes(kz)) return "🗜"
+  if ([".txt", ".md"].includes(kz)) return "📝"
+  return "📦"
+}
+
+/* =====================================================
+ * 重命名弹窗（规范审核）
+ * ===================================================== */
+let zm_dang_qian_path = ""
+
+function da_kai_zm_tan(abs_path) {
+  zm_dang_qian_path = abs_path
+  const ming = abs_path.split(/[\\/]/).pop()
+  document.getElementById("zm-yuan-ming").textContent = "当前文件：" + abs_path
+  document.getElementById("zm-shu-ru").value = ming
+  document.getElementById("zm-shen-he").style.display = "none"
+  document.getElementById("zhong-ming-tan").classList.remove("yin-cang")
+  zm_yu_lan_shen_he()
+  document.getElementById("zm-shu-ru").focus()
+}
+
+function guan_bi_zm_tan() {
+  document.getElementById("zhong-ming-tan").classList.add("yin-cang")
+}
+
+let zm_shen_he_ding_shi = null
+function zm_yu_lan_shen_he() {
+  clearTimeout(zm_shen_he_ding_shi)
+  zm_shen_he_ding_shi = setTimeout(async () => {
+    const xin_ming = document.getElementById("zm-shu-ru").value.trim()
+    if (!xin_ming || !zm_dang_qian_path) return
+    try {
+      const r = await qing_qiu("/api/liu_lan/shen_he?path=" + encodeURIComponent(zm_dang_qian_path)
+        + "&xin_ming=" + encodeURIComponent(xin_ming))
+      if (r.ok) {
+        document.getElementById("zm-gui-fan-ming").textContent = r.gui_fan_ming
+        document.getElementById("zm-yi-jian").innerHTML = r.yi_jian.map(y => `<li>${escapeHtml(y)}</li>`).join("")
+        document.getElementById("zm-shen-he").style.display = "block"
+      } else {
+        document.getElementById("zm-gui-fan-ming").textContent = r.cuo_wu || "无法审核"
+        document.getElementById("zm-yi-jian").innerHTML = ""
+        document.getElementById("zm-shen-he").style.display = "block"
+      }
+    } catch (e) { /* 输入中异常静默 */ }
+  }, 400)
+}
+
+async function zm_ai_jian_yi(an_niu) {
+  if (!zm_dang_qian_path) return
+  an_niu.disabled = true
+  an_niu.textContent = "AI 分析中…"
+  // 图片识别警告复位
+  const jing_gao = document.getElementById("zm-tu-pian-jing-gao")
+  jing_gao.style.display = "none"
+  jing_gao.textContent = ""
+  try {
+    const r = await qing_qiu("/api/liu_lan/ai_ming?path=" + encodeURIComponent(zm_dang_qian_path))
+    if (r.ok) {
+      document.getElementById("zm-shu-ru").value = r.ming
+      zm_yu_lan_shen_he()
+      // 图片没识别出内容：名字不是按内容起的，弹窗里醒目提醒
+      if (r.tu_pian_shi_bai) {
+        jing_gao.textContent = "⚠ " + r.tu_pian_shi_bai + "，此名字未结合图片内容"
+        jing_gao.style.display = "block"
+      }
+    } else {
+      alert("AI 命名失败：" + (r.cuo_wu || ""))
+    }
+  } catch (e) {
+    alert("AI 命名出错：" + e)
+  }
+  an_niu.disabled = false
+  an_niu.textContent = "✨ AI 规范命名"
+}
+
+async function zm_que_ren() {
+  const xin_ming = document.getElementById("zm-shu-ru").value.trim()
+  if (!xin_ming) { alert("请输入新文件名"); return }
+  try {
+    const r = await qing_qiu("/api/liu_lan/zhong_ming", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: zm_dang_qian_path, xin_ming: xin_ming })
+    })
+    if (r.ok) {
+      guan_bi_zm_tan()
+      shua_xin_dang_qian()
+      const zhui = r.zhui ? "（同目录有重名，已自动加序号）" : ""
+      alert(`已重命名为：${r.xin_ming}${zhui}\n向量索引已在后台重建。`)
+    } else {
+      alert("重命名失败：" + (r.cuo_wu || ""))
+    }
+  } catch (e) {
+    alert("重命名出错：" + e)
+  }
+}
+
+/* =====================================================
+ * 标签/摘要编辑弹窗（浏览页）：手动改 + AI 按内容生成
+ * ===================================================== */
+let bq_dang_qian_path = ""
+
+function da_kai_bq_tan(abs_path, biao_qian, zhai_yao) {
+  bq_dang_qian_path = abs_path
+  document.getElementById("bq-yuan-ming").textContent = "当前文件：" + abs_path
+  document.getElementById("bq-shu-ru").value = biao_qian || ""
+  document.getElementById("bq-zhai-yao").value = zhai_yao || ""
+  document.getElementById("bq-yu-lan").style.display = "none"
+  document.getElementById("biao-qian-tan").classList.remove("yin-cang")
+  document.getElementById("bq-shu-ru").focus()
+}
+
+function guan_bi_bq_tan() {
+  document.getElementById("biao-qian-tan").classList.add("yin-cang")
+}
+
+/* AI 按内容生成标签+摘要（图片走视觉识别），填进输入框，保存前可再改 */
+async function bq_ai_sheng_cheng(an_niu) {
+  if (!bq_dang_qian_path) return
+  an_niu.disabled = true
+  an_niu.textContent = "AI 分析中…"
+  try {
+    const r = await qing_qiu("/api/liu_lan/biao_qian_ai?path=" + encodeURIComponent(bq_dang_qian_path))
+    if (r.ok) {
+      document.getElementById("bq-shu-ru").value = r.biao_qian || ""
+      document.getElementById("bq-zhai-yao").value = r.zhai_yao || ""
+      if (r.nei_rong_yu_lan) {
+        const yl = document.getElementById("bq-yu-lan")
+        yl.textContent = "内容预览：" + r.nei_rong_yu_lan
+        yl.style.display = "block"
+      }
+    } else {
+      alert("AI 生成失败：" + (r.cuo_wu || ""))
+    }
+  } catch (e) {
+    alert("AI 生成出错：" + e)
+  }
+  an_niu.disabled = false
+  an_niu.textContent = "✨ AI 生成"
+}
+
+async function bq_bao_cun() {
+  if (!bq_dang_qian_path) return
+  try {
+    const r = await qing_qiu("/api/liu_lan/biao_qian", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path: bq_dang_qian_path,
+        biao_qian: document.getElementById("bq-shu-ru").value,
+        zhai_yao: document.getElementById("bq-zhai-yao").value
+      })
+    })
+    if (r.ok) {
+      guan_bi_bq_tan()
+      shua_xin_dang_qian()
+      alert("已保存，向量正在后台重建（稍后语义搜索即可命中新标签）")
+    } else {
+      alert("保存失败：" + (r.cuo_wu || ""))
+    }
+  } catch (e) {
+    alert("保存出错：" + e)
+  }
+}
+
+/* =====================================================
+ * 归类体检（标签体检：审标签是否合适 + 文件名是否规范）
+ * ===================================================== */
+/* 体检范围下拉：年份目录动态加载 */
+async function jia_zai_tj_fan_wei() {
+  try {
+    const mu_lu = await qing_qiu("/api/ti_jian/fan_wei_qing_dan")
+    const xuan = document.getElementById("tj-fan-wei")
+    const dang_qian = xuan.value
+    xuan.innerHTML = `<option value="">全库扫描（较慢）</option>` +
+      mu_lu.map(y => `<option value="${escapeHtml(y)}">只扫 ${escapeHtml(y)} 年</option>`).join("")
+    if (mu_lu.includes(dang_qian)) xuan.value = dang_qian
+  } catch (e) { /* 服务未起时静默 */ }
+}
+
+async function kai_shi_ti_jian() {
+  const fan_wei = document.getElementById("tj-fan-wei").value
+  const zhui_jia = document.getElementById("tj-zhui-jia").checked
+  const mo_shi_wen = zhui_jia
+    ? "追加模式：只审还没体检过的文件，不清空旧结果。"
+    : "全量重扫：清空旧体检结果，全部重新审一遍。"
+  if (!confirm("体检只读不改文件，但会调用 DeepSeek API 逐文件审核（数量多的话要跑一阵）。\n" + mo_shi_wen + "\n开始？")) return
+  await qing_qiu("/api/ti_jian/kai_shi", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fan_wei: fan_wei, zhui_jia: zhui_jia })
+  })
+  tj_lun_xun_jin_du()
+}
+
+let tj_jin_du_ding_shi = null
+async function tj_lun_xun_jin_du() {
+  clearTimeout(tj_jin_du_ding_shi)
+  const j = await qing_qiu("/api/ti_jian/jin_du")
+  const bai_fen = j.zong_shu ? j.wan_cheng / j.zong_shu * 100 : 0
+  document.getElementById("tj-jin-du-nei").style.width = bai_fen + "%"
+  document.getElementById("tj-jin-du-wen-zi").textContent =
+    j.zong_shu ? `${j.zui_hou_xin_xi}（建议改标签${j.gai_biao_qian}，建议加标签${j.jia_biao_qian}，失败${j.cuo_wu}）` : j.zui_hou_xin_xi
+  if (j.yun_xing_zhong) {
+    tj_jin_du_ding_shi = setTimeout(tj_lun_xun_jin_du, 2000)
+  } else {
+    jia_zai_ti_jian_jie_guo()
+  }
+}
+
+async function jia_zai_ti_jian_jie_guo() {
+  const zhi_kan = document.getElementById("tj-zhi-kan-jian-yi").checked
+  const r = await qing_qiu("/api/ti_jian/jie_guo?zhuang_tai=待审&dong_zuo=全部")
+  const he = document.getElementById("tj-lie-biao")
+  document.getElementById("tj-quan-xuan").checked = false
+  const tong = r.tong_ji || {}
+  document.getElementById("tj-tong-ji").textContent =
+    `待审 ${tong["待审"] || 0} · 已改标签 ${tong["已改标签"] || 0} · 已加标签 ${tong["已加标签"] || 0} · 已重命名 ${tong["已重命名"] || 0} · 已忽略 ${tong["已忽略"] || 0}`
+  let rows = r.jie_guo
+  if (zhi_kan) rows = rows.filter(x => x.dong_zuo !== "bu_dong" || x.ming_wen_ti)
+  window.tj_hang_huan_cun = rows        // 供批量操作按建议类型过滤
+  if (rows.length === 0) {
+    he.innerHTML = `<div class="kong-bai">${zhi_kan ? "没有待处理的建议（或还没跑体检）" : "没有待审记录"}</div>`
+    return
+  }
+  he.innerHTML = rows.map(x => {
+    const dong_zuo_ming = { gai_biao_qian: "🏷 改标签", jia_biao_qian: "➕ 加标签", bu_dong: "✓ 不动" }[x.dong_zuo] || x.dong_zuo
+    const yan_se = x.dong_zuo === "gai_biao_qian" ? "var(--cuo-wu)" : (x.dong_zuo === "jia_biao_qian" ? "var(--jing-gao)" : "var(--cheng-gong)")
+    // 命名问题行：规则检出 + 建议规范名
+    const ming_xing = x.ming_wen_ti
+      ? `<div class="fu-zhu" style="color:var(--jing-gao)">⚠ ${escapeHtml(x.ming_wen_ti)}</div>
+         ${x.gui_fan_ming && x.gui_fan_ming !== x.wen_jian_ming
+           ? `<div class="fu-zhu">✏️ ➡ <strong style="color:var(--cheng-gong)">${escapeHtml(x.gui_fan_ming)}</strong></div>`
+           : `<div class="fu-zhu" style="color:var(--ci-yao-wen-zi)">（未给出建议名）</div>`}`
+      : ""
+    // 标签行：当前标签 → 建议标签（没建议的只显示当前标签和理由）
+    const biao_qian_xing = x.jian_yi_biao_qian
+      ? `<div class="fu-zhu">🏷 <span style="color:var(--ci-yao-wen-zi)">${escapeHtml(x.dang_qian_biao_qian || "（无标签）")}</span> → <strong style="color:var(--zhu-se)">${escapeHtml(x.jian_yi_biao_qian)}</strong>　${escapeHtml(x.li_you)}</div>`
+      : `<div class="fu-zhu">🏷 ${escapeHtml(x.dang_qian_biao_qian || "（无标签）")}　${escapeHtml(x.li_you)}</div>`
+    return `<div class="hang" style="align-items:flex-start">
+      <input type="checkbox" class="tj-xuan" value="${x.id}" style="margin-top:3px">
+      <div class="xin-xi">
+        <div class="ming2">${escapeHtml(x.wen_jian_ming)}</div>
+        ${biao_qian_xing}
+        ${ming_xing}
+      </div>
+      <span class="fu-zhu" style="color:${yan_se}">${dong_zuo_ming}</span>
+    </div>`
+  }).join("")
+}
+
+function tj_quan_xuan() {
+  const quan = document.getElementById("tj-quan-xuan").checked
+  document.querySelectorAll(".tj-xuan").forEach(c => c.checked = quan)
+}
+
+async function tj_pi_liang(dong_zuo) {
+  const ids = [...document.querySelectorAll(".tj-xuan:checked")].map(c => Number(c.value))
+  if (ids.length === 0) { alert("先勾选要处理的条目"); return }
+  // 按动作类型过滤：改标签只接受"建议改标签"的条目；加标签接受"改标签"和"加标签"两类；
+  // 重命名接受所有有建议名的条目；忽略接受全部
+  const he_shi = { gai_biao_qian: ["gai_biao_qian"], jia_biao_qian: ["gai_biao_qian", "jia_biao_qian"], zhong_ming: null, ignore: ["gai_biao_qian", "jia_biao_qian", "bu_dong"] }[dong_zuo]
+  const neng_yong = ids.filter(id => {
+    const hang = (window.tj_hang_huan_cun || []).find(x => x.id === id)
+    if (!hang) return false
+    if (dong_zuo === "zhong_ming") return !!hang.gui_fan_ming && hang.gui_fan_ming !== hang.wen_jian_ming
+    return he_shi.includes(hang.dong_zuo)
+  })
+  const bei_lv = ids.length - neng_yong.length
+  if (neng_yong.length === 0) {
+    alert(dong_zuo === "gai_biao_qian"
+      ? "选中的条目都是「建议加标签」的（标签方向没大问题），请用「加标签」按钮"
+      : dong_zuo === "zhong_ming"
+        ? "选中的条目都没有可用的建议新名（只有标签建议的条目请用「改标签/加标签」按钮）"
+        : "选中的条目不支持该操作")
+    return
+  }
+  const ming_ling = { gai_biao_qian: "用建议标签替换（向量自动重建）", jia_biao_qian: "建议标签合并进去（向量自动重建）", zhong_ming: "原地重命名", ignore: "忽略" }[dong_zuo]
+  const ti_shi = bei_lv > 0 ? `其中 ${bei_lv} 条不符合该操作的条件，已自动跳过。\n\n` : ""
+  if (!confirm(`${ti_shi}对符合条件的 ${neng_yong.length} 条执行「${ming_ling}」？`)) return
+  xian_shi_mang("正在执行「" + ming_ling + "」，请勿关闭页面…")
+  let r
+  try {
+    r = await qing_qiu("/api/ti_jian/chu_li", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dong_zuo: dong_zuo, ids: neng_yong })
+    })
+  } finally {
+    yin_cang_mang()
+  }
+  const lv = r.tiao_gou ? `，跳过 ${r.tiao_gou} 条` : ""
+  alert(`处理完成：成功 ${r.ok} 条${r.shi_bai ? "，失败 " + r.shi_bai + " 条（文件可能已被移动）" : ""}${lv}`)
+  jia_zai_ti_jian_jie_guo()
+  jia_zai_zhuang_tai()
+}
+
+
+/* =====================================================
+ * 索引管理
+ * ===================================================== */
+async function kai_shi_suo_yin() {
+  await qing_qiu("/api/suo_yin/kai_shi", { method: "POST" })
+  lun_xun_jin_du()
+}
+async function chong_jian_suo_yin() {
+  const chu_li_sjx = document.getElementById("cj-chu-li-sjx").checked
+  const ai_ming = document.getElementById("cj-ai-ming").checked
+  let ti_shi = "确定全量重建？会清空现有向量（含段落分块）重新计算，文件多时耗时较长（可挂着跑）。"
+  if (chu_li_sjx) ti_shi += "\n\n• 先处理收件箱：AI 命名/标签后归档到年份目录，再统一索引"
+  if (ai_ming) ti_shi += "\n\n• 用 AI 给每个能读出内容的文件重新起名并直接改名。\n  改名有日志，但无法一键撤销；耗时和 API 费用会明显增加。"
+  if (!confirm(ti_shi + "\n\n继续？")) return
+  const r = await qing_qiu("/api/suo_yin/chong_jian", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chu_li_shou_jian_xiang: chu_li_sjx, ai_gui_fan_ming: ai_ming })
+  })
+  if (!r.ok) { alert("启动失败：" + (r.xin_xi || "已有任务在运行")); return }
+  lun_xun_jin_du()
+}
+async function pi_liang_zhai_yao() {
+  await qing_qiu("/api/suo_yin/pi_liang_zhai_yao", { method: "POST" })
+  alert("已启动后台生成摘要（约300个一轮），稍后可到语义搜索里看效果")
+}
+
+/* 完整性检查：磁盘文件 / 数据库记录 / 向量库 三方对账 */
+async function jian_cha_suo_yin() {
+  const he = document.getElementById("suo-yin-jian-cha")
+  he.innerHTML = "<div>正在对账…</div>"
+  const r = await qing_qiu("/api/suo_yin/jian_cha")
+  const lie_biao = (biao, lie, shu, yan_se) => {
+    if (!shu) return ""
+    const xiang = lie.slice(0, 20).map(x => `<div style="padding-left:16px;color:var(--ci-yao-wen-zi)">${escapeHtml(x)}</div>`).join("")
+    const sheng = shu > 20 ? `<div style="padding-left:16px;color:var(--ci-yao-wen-zi)">…还有 ${shu - 20} 条</div>` : ""
+    return `<div style="color:${yan_se};margin-top:6px">▸ ${biao}（${shu}）：</div>${xiang}${sheng}`
+  }
+  let html = `<div>磁盘文件 ${r.ci_pan_shu} · 数据库记录 ${r.ji_lu_shu} · 向量 ${r.xiang_liang_shu}${r.wu_wen_ben_shu ? `（其中 ${r.wu_wen_ben_shu} 个无向量记录，点增量索引补齐）` : ""}</div>`
+  if (!r.que_suo_yin_shu && !r.xiang_liang_diu_shi_shu && !r.gu_er_ji_lu_shu && !r.duo_yu_xiang_liang_shu) {
+    html += `<div style="color:#4ade80;margin-top:6px">✓ 三方一致，矢量库完整</div>`
+  } else {
+    html += lie_biao("待索引（磁盘有文件但没进索引，点增量索引补齐）", r.que_suo_yin, r.que_suo_yin_shu, "#f59e0b")
+    html += lie_biao("向量丢失（数据库标记有向量但实际没有）", r.xiang_liang_diu_shi, r.xiang_liang_diu_shi_shu, "#ef4444")
+    html += lie_biao("孤儿记录（库里有记录但文件已被删，不影响使用）", r.gu_er_ji_lu, r.gu_er_ji_lu_shu, "var(--ci-yao-wen-zi)")
+    html += lie_biao("多余向量（建议全量重建清理）", r.duo_yu_xiang_liang, r.duo_yu_xiang_liang_shu, "var(--ci-yao-wen-zi)")
+    if (r.xiang_liang_diu_shi_shu > 0) {
+      html += `<div style="margin-top:8px"><button class="an-niu zhu-yao" onclick="xiu_fu_xiang_liang()">🔧 一键修复向量丢失（复位标记+增量重建）</button></div>`
+    }
+    if (r.que_suo_yin_shu > 0) {
+      html += `<div style="margin-top:8px"><button class="an-niu" onclick="kai_shi_suo_yin()">▶ 开始增量索引</button></div>`
+    }
+  }
+  he.innerHTML = html
+}
+
+async function xiu_fu_xiang_liang() {
+  if (!confirm("将把丢失向量的文件标记复位并启动增量索引重建，确认？")) return
+  const r = await qing_qiu("/api/suo_yin/xiu_fu", { method: "POST" })
+  alert(r.xin_xi || "完成")
+  lun_xun_jin_du()
+  jian_cha_suo_yin()
+}
+
+let jin_du_ding_shi = null
+async function lun_xun_jin_du() {
+  clearTimeout(jin_du_ding_shi)
+  const j = await qing_qiu("/api/suo_yin/jin_du")
+  const bai_fen = j.zong_shu ? j.wan_cheng / j.zong_shu * 100 : 0
+  document.getElementById("jin-du-nei").style.width = bai_fen + "%"
+  document.getElementById("jin-du-wen-zi").textContent =
+    j.zong_shu
+      ? `${j.zui_hou_xin_xi}（共${j.zong_shu}个，跳过${j.tiao_guo}，失败${j.cuo_wu}）`
+      : j.zui_hou_xin_xi
+  if (j.yun_xing_zhong) {
+    jin_du_ding_shi = setTimeout(lun_xun_jin_du, 1500)
+  } else {
+    jia_zai_zhuang_tai()
+  }
+}
+
+/* =====================================================
+ * 考核查询页（数据来自 /api/ai/kao_he*，只读）
+ * ===================================================== */
+let kh_yi_jia_zai = false
+let kh_pian_yi = 0, kh_zong_shu = 0, kh_mei_ye = 20
+
+function kh_chu_shi() {
+  kh_yi_jia_zai = true
+  kh_cha(0)
+}
+
+/* 收集筛选条件（参数名与后端 kao_he_shu_ju 模块一致） */
+function kh_tiao_jian() {
+  const p = new URLSearchParams()
+  const ci = document.getElementById("kh-ci").value.trim()
+  if (ci) p.set("guan_jian_ci", ci)
+  const nian = document.getElementById("kh-nian").value
+  if (nian) p.set("nian_fen", nian)
+  const da_lei = document.getElementById("kh-da-lei").value
+  if (da_lei) p.set("tiao_li_da_lei", da_lei)
+  const ji_bie = document.getElementById("kh-ji-bie").value
+  if (ji_bie) p.set("ji_bie", ji_bie)
+  const ban_zu = document.getElementById("kh-ban-zu").value.trim()
+  if (ban_zu) p.set("ze_ren_ban_zu", ban_zu)
+  if (document.getElementById("kh-zhong-dian").checked) p.set("zhong_dian", "1")
+  return p
+}
+
+async function kh_cha(pian_yi) {
+  kh_pian_yi = Math.max(0, pian_yi || 0)
+  const p = kh_tiao_jian()
+  p.set("n", kh_mei_ye)
+  p.set("offset", kh_pian_yi)
+  const he = document.getElementById("kh-lie-biao")
+  he.innerHTML = `<div class="kong-bai">查询中…</div>`
+  try {
+    const r = await qing_qiu("/api/ai/kao_he?" + p.toString())
+    if (!r.ok) { he.innerHTML = `<div class="kong-bai">${escapeHtml(r.cuo_wu || "查询失败")}</div>`; return }
+    kh_zong_shu = r.zong_shu
+    document.getElementById("kh-jie-guo-shu").textContent =
+      `共 ${r.zong_shu} 条，显示第 ${kh_pian_yi + (r.jie_guo.length ? 1 : 0)}–${kh_pian_yi + r.jie_guo.length} 条`
+    document.getElementById("kh-fen-ye").style.display = kh_zong_shu > kh_mei_ye ? "flex" : "none"
+    document.getElementById("kh-ye-ma").textContent =
+      `第 ${Math.floor(kh_pian_yi / kh_mei_ye) + 1} / ${Math.max(1, Math.ceil(kh_zong_shu / kh_mei_ye))} 页`
+    he.innerHTML = r.jie_guo.map(kh_xiang_html).join("") || `<div class="kong-bai">没有符合条件的记录</div>`
+  } catch (e) {
+    he.innerHTML = `<div class="kong-bai">查询出错：${escapeHtml(String(e))}</div>`
+  }
+}
+
+function kh_xiang_html(x) {
+  const ze_ren = (x.责任人明细 || []).map(y =>
+    escapeHtml(y.姓名 || "") +
+    (y.责任等级 ? "（" + escapeHtml(y.责任等级) + "）" : "") +
+    (y.扣款 ? " 扣款 " + y.扣款 + " 元" : "")).join("；")
+  const biao = [x.级别, x.问题层级, x.条例大类, x.条例条目].filter(Boolean)
+    .map(v => `<span class="kh-biao-qian">${escapeHtml(v)}</span>`).join("")
+  return `<div class="tiao-mu" style="align-items:flex-start;display:block">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="xiang-si">${escapeHtml((x.检查时间 || "").slice(0, 10))}</span>${biao}
+      ${x.重要 ? `<span class="kh-biao-qian" style="color:#f59e0b">重点</span>` : ""}
+      ${x.扣款合计 ? `<span class="xiang-si">扣款 ${x.扣款合计} 元</span>` : ""}
+    </div>
+    <div class="kh-xiang" style="margin-top:6px"><b>问题：</b>${escapeHtml(x.检查内容 || "")}</div>
+    <div class="kh-xiang">
+      <b>责任：</b>${escapeHtml([x.责任单位所在车间, x.责任单位所在班组].filter(Boolean).join(" "))}
+      　<b>检查人：</b>${escapeHtml(x.检查人 || "")}　<b>地点：</b>${escapeHtml(x.检查地点 || "")}
+    </div>
+    <details style="margin-top:6px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--zhu-se)">依据 / 整改 / 责任人</summary>
+      <div class="kh-xiang">
+        <b>对规对标：</b>${escapeHtml(x.对规对标 || "（无）")}<br>
+        <b>整改措施：</b>${escapeHtml(x.整改措施 || "（无）")}<br>
+        <b>整改情况：</b>${escapeHtml(x.整改情况 || "（无）")}<br>
+        <b>责任人：</b>${ze_ren || "（未填）"}<br>
+        <b>条例内容：</b>${escapeHtml(x.条例内容 || "（无）")}
+      </div>
+    </details>
+  </div>`
+}
+
+async function kh_tong_ji(mo) {
+  const fen_zu = document.getElementById("kh-fen-zu").value
+  const p = kh_tiao_jian()
+  p.set("fen_zu", fen_zu)
+  const he = document.getElementById("kh-tong-ji")
+  he.innerHTML = `<div class="kong-bai">统计中…</div>`
+  try {
+    const url = (mo === "qian" ? "/api/ai/kao_he/kou_kuan?" : "/api/ai/kao_he/tong_ji?")
+    const r = await qing_qiu(url + p.toString())
+    if (!r.ok) { he.innerHTML = `<div class="kong-bai">${escapeHtml(r.cuo_wu || "统计失败")}</div>`; return }
+    const hang = r.jie_guo || []
+    if (!hang.length) { he.innerHTML = `<div class="kong-bai">没有数据</div>`; return }
+    const zui = Math.max(...hang.map(x => mo === "qian" ? (x.kou_kuan || 0) : x.shu)) || 1
+    he.innerHTML = `<div class="kh-tong-ji-kuang">
+      <div style="font-size:13px;margin-bottom:8px">按「${escapeHtml(fen_zu)}」统计${mo === "qian" ? "扣款" : "条数"}：</div>
+      ${hang.map(x => {
+        const zhi = mo === "qian" ? (x.kou_kuan || 0) : x.shu
+        const shuo = mo === "qian" ? `${x.kou_kuan} 元 / ${x.shu} 条 / 扣 ${x.kou_fen} 分` : `${x.shu} 条`
+        return `<div class="kh-tiao">
+          <span class="ming" title="${escapeHtml(x.zhi)}">${escapeHtml(x.zhi || "（空）")}</span>
+          <div class="tiao" style="width:${Math.max(2, zhi / zui * 220)}px"></div>
+          <span class="shu">${shuo}</span>
+        </div>`
+      }).join("")}
+    </div>`
+  } catch (e) {
+    he.innerHTML = `<div class="kong-bai">统计出错：${escapeHtml(String(e))}</div>`
+  }
+}
+
+function kh_fan_ye(fang) {
+  const xin = kh_pian_yi + fang * kh_mei_ye
+  if (xin < 0 || xin >= kh_zong_shu) return
+  kh_cha(xin)
+}
+
+/* =====================================================
+ * 小工具
+ * ===================================================== */
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]))
+}
+function jsQ(s) { return String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'") }
+function formatSize(n) {
+  if (n > 1048576) return (n / 1048576).toFixed(1) + " MB"
+  if (n > 1024) return (n / 1024).toFixed(0) + " KB"
+  return n + " B"
+}
+
+// 回车直接搜索
+document.getElementById("sou-suo-ci").addEventListener("keydown", e => {
+  if (e.key === "Enter") { clearTimeout(sou_suo_ding_shi); zhi_xing_sou_suo() }
+})
+</script>
+</body>
+</html>

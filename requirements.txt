@@ -1,0 +1,26 @@
+# 文档库管家 依赖清单（Python 3.12）
+# 安装：pip install -r requirements.txt
+flask>=3.0
+sqlalchemy>=2.0
+chromadb>=0.5
+onnxruntime>=1.17
+tokenizers>=0.15
+huggingface_hub>=0.20
+openai>=1.0
+numpy>=1.24
+python-docx>=1.0
+pypdf>=4.0
+openpyxl>=3.1
+mcp>=2.0
+Pillow
+gunicorn>=21; sys_platform != "win32"
+
+# 仅 Windows：.doc/.xls 老格式走 WPS/Word COM；SQL Server 走 pyodbc
+pywin32>=306; sys_platform == "win32"
+pyodbc>=5.0; sys_platform == "win32"
+
+# 说明：
+# - 默认台账库是 SQLite，不需要 pyodbc。
+# - 在 Linux 上连 SQL Server，需要额外安装 unixodbc-dev 和 pyodbc：
+#     apt-get install -y unixodbc-dev && pip install pyodbc
+# - 首次使用语义搜索会下载 bge-m3 ONNX（约 2GB），建议给 shu_ju/models 持久化磁盘。
