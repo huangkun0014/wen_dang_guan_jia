@@ -1,6 +1,7 @@
 # 文档库管家（WenDangKu）
 
 一个可自托管的私人文档库 + 规章检索 + 考核台账查询系统。
+
 把散落的 Word / PDF / 图片 / 表格按年份扁平存放，用 AI 生成摘要和标签，支持
 **语义 + 关键词混合检索**、**规章条款核对**、**考核台账查询**，并可通过 MCP 让
 Kimi / Claude 等 AI 应用直接查阅。
@@ -23,7 +24,7 @@ Kimi / Claude 等 AI 应用直接查阅。
 
 ## 快速开始
 
-### 方式一：本机 Python（Windows / Linux / macOS）
+### 本机 Python（Windows / Linux / macOS）
 
 要求 Python **3.12**。
 
@@ -43,7 +44,7 @@ python run.py
 - 首次使用语义检索会下载 `bge-m3` ONNX 模型（约 2GB，走 hf-mirror 镜像）。
 - Windows 上 `.doc/.xls` 老格式会调用本机 WPS/Word COM；Linux 上自动关闭该功能。
 
-### 方式二：Docker
+### Docker
 
 ```bash
 docker compose up -d
@@ -52,12 +53,13 @@ docker compose up -d
 - 默认端口 `8001`，文档库在 `./data/文档库`，向量/模型/设置在 `./data/shu_ju`。
 - 容器内默认 `MCP_HTTP_KAI_QI=false`；需要 MCP 时在 `docker-compose.yml` 打开并映射 8765。
 - 模型缓存建议挂载持久化，否则每次重建容器都要重新下载约 2GB。
-- 支持 `Procfile` 的平台会使用 `gunicorn -w 1 --threads 8 run:app`；请只开 **1 个 worker**
-  （索引线程和 MCP 都是进程内的，多 worker 会重复跑）。
+- 只开 **1 个 worker**（索引线程和 MCP 都是进程内的，多 worker 会重复跑）。
 
 ---
 
-## 首次配置（首页 ⚙️ 系统设置）
+## 配置
+
+所有配置都可以在首页右上角 **⚙️ 系统设置** 里改：
 
 | 配置 | 说明 |
 | --- | --- |
@@ -67,12 +69,16 @@ docker compose up -d
 | DeepSeek | API Key、接口地址、模型；不填则 AI 命名/摘要/条款重排不可用 |
 | 服务 / MCP | 监听地址、端口、MCP 开关和端口 |
 
-> 文档库路径、数据库、端口、MCP 改完需要 **重启服务**；改路径/数据库后还要到「索引管理」**全量重建**一次。
-> DeepSeek 和提示词立即生效。
-> 设置保存在 `shu_ju/she_zhi.json`（含密钥，已在 `.gitignore` 中排除，**不要上传**）。
+配置优先级：
 
-配置优先级：**代码默认值 < 环境变量（含 `.env`） < `shu_ju/she_zhi.json`**。
-云平台可以用环境变量注入，见 `.env.example`。
+```
+代码默认值  <  环境变量 / .env  <  shu_ju/she_zhi.json（网页设置）
+```
+
+- 改文档库路径/数据库/端口/MCP 需要 **重启服务**；改路径/数据库后还要到「索引管理」**全量重建**一次。
+- 改 DeepSeek、提示词、考核库连接可热生效。
+- `shu_ju/she_zhi.json` 含密钥，已在 `.gitignore` 中排除，**不要提交**。
+- 环境变量示例见 `.env.example`；完整字段说明见 [配置说明.md](配置说明.md)。
 
 ---
 
@@ -122,106 +128,11 @@ docker compose up -d
 
 Windows 下 `command` 填虚拟环境的 `python.exe`。
 
-工具：`search_documents` / `read_document` / `list_tags` / `list_genres` /
-`query_assessments` / `assessment_stats` / `assessment_fines` /
-`assessment_dimensions` / `find_similar_assessments` /
-`check_compliance` / `analyze_assessment_case` 等。
+工具分为三类：
 
----
-
-## 打包上传
-
-```bash
-python da_bao_shang_chuan.py
-```
-
-会生成 `wendangku_release.zip`，只包含代码、文档和部署文件，自动排除
-`shu_ju/`（向量/模型/设置）、`ri_zhi/`（日志）、`文档库/`（私人文件）、`huan_jing/`（虚拟环境）
-和 `.env`。上传前建议先解压到空目录跑一遍：
-
-```bash
-python run.py
-```
-
-确认首页、系统设置、索引都能正常打开。
-
----
-
-## 知乎 AI Works 发布方式
-
-知乎 AI Works 的「上传源码（自动构建）」目前只接受**纯静态前端 / Node.js HTTP 后端 / Node SSR** 项目
-（AI Works Skill v1.2.0 的探测分支）。本项目是 **Python Flask**，只读探测结果为：
-
-```json
-{
-  "Status": "blocked",
-  "ProjectType": "unsupported",
-  "Findings": [
-    {"Code": "E_PROJECT_AMBIGUOUS", "Reason": "No package.json was found at the project root."},
-    {"Code": "E_LOCKFILE_MISSING", "Reason": "The isolated delivery source has no npm lockfile yet."}
-  ]
-}
-```
-
-所以**不能直接走「上传源码」**，加一个 `package.json` 也没用——Node 运行时不会执行 Flask。
-可选路径：
-
-1. **推荐：站外链接**
-   - 用本项目的 `Dockerfile` 把 Python 服务部署到任意公网主机/云托管（VPS、CloudBase 云托管、Railway、Render 等）；
-   - 拿到 HTTPS 地址后，在 AI Works 发布方式里选「站外链接」，填这个地址；
-   - 这样所有功能（Flask、SQLite/SQL Server、Chroma、MCP）都保留。
-2. **CloudBase 云托管/容器**：把 Docker 镜像跑在 CloudBase 的容器服务上，再用「站外链接」。
-3. **上传源码**：需要把后端重写成 Node.js（Flask 路由、SQLAlchemy、Chroma、ONNX 嵌入、文档提取都要重做），
-   工作量大，不建议为了发布而重写。
-4. **GitHub 仓库**：可以展示源码，但平台仍按源码构建规则执行，不会因此支持 Python。
-
-如果只是想在 AI Works 里放一个入口页，也可以上传一个纯静态页，用 iframe/链接指向第 1 步的公网地址；
-但真正运行的服务仍在 Python 主机上。
-
-### 公网 Docker 部署（站外链接用）
-
-```bash
-unzip wendangku_release.zip
-cd wen_dang_guan_jia
-cp .env.example .env        # 至少填 DEEPSEEK_KEY；也可部署后在首页设置
-docker compose up -d
-```
-
-- 文档库和 `shu_ju/` 都挂载在 `./data/`，容器重建不丢；
-- 用 Caddy/Nginx 加 HTTPS 和登录，不要把 8001 直接暴露公网；
-- 验证 `https://你的域名/api/xi_tong/zhuang_tai` 返回 `shu_ju_ku_ok: true`；
-- 然后在 AI Works 选「站外链接」，填这个 HTTPS 地址。
-
-## 公开源码（GitHub / Gitee）
-
-- 仓库只放代码、文档和部署文件；**不要放** `shu_ju/`、`ri_zhi/`、`文档库/`、`huan_jing/`、`.env`、`shu_ju/she_zhi.json`。
-- 源码里的单位名、库名、个人示例已替换为通用示例；SQL Server / 考核库 / 本地 AI 的真实配置写在
-  [配置说明.md](配置说明.md)，部署时自己填。
-- GitHub 经常连不上时：
-  - 用 SSH 走 443 端口（`~/.ssh/config`）：
-    ```
-    Host github.com
-      HostName ssh.github.com
-      Port 443
-      User git
-    ```
-  - 或者给 `git` 配 HTTPS 代理：
-    ```bash
-    git config --global http.proxy http://127.0.0.1:你的代理端口
-    ```
-  - 也可以先推 Gitee，再把 GitHub 当镜像；AI Works 的「GitHub 仓库」只认 GitHub，
-    但「站外链接」可以直接指向 Gitee 仓库页。
-- AI Works 的「GitHub 仓库」只是项目页的源码入口展示，不会运行 Python；运行仍走「站外链接」。
-
-## 数据与安全
-
-- **不要上传**：`shu_ju/`（向量、模型、`she_zhi.json`）、`ri_zhi/`、`文档库/`、`huan_jing/`、`.env`。
-  这些已在 `.gitignore` / `.dockerignore` 中排除。
-- 公网部署时，建议：
-  - 用反向代理加登录/访问控制；
-  - 设置 `AI_JIE_KOU_KEY` 给 `/api/ai/*` 加一道 Key；
-  - 不要把 8001 / 8765 直接暴露到公网。
-- 系统设置接口不会回显完整密码/Key，但**能修改配置**；公网必须加访问控制。
+- 文档：`search_documents` / `read_document` / `list_tags` / `list_genres` / `recent_documents` / `document_info`
+- 考核：`query_assessments` / `assessment_stats` / `assessment_fines` / `assessment_dimensions` / `find_similar_assessments`
+- 组合：`check_compliance`（规章核对）/ `analyze_assessment_case`（考核案例分析）
 
 ---
 
@@ -240,12 +151,23 @@ wen_dang_guan_jia/
 ├── kimi_work_plugin/       # Kimi Work 插件源
 ├── requirements.txt
 ├── Dockerfile / docker-compose.yml / Procfile
-├── da_bao_shang_chuan.py   # 打包上传版（排除数据/密钥）
 ├── .env.example
 ├── 配置说明.md
 ├── 使用说明.md
 └── 功能逻辑说明.md
 ```
+
+---
+
+## 数据与安全
+
+- **不要上传**：`shu_ju/`（向量、模型、`she_zhi.json`）、`ri_zhi/`、`文档库/`、`huan_jing/`、`.env`。
+  这些已在 `.gitignore` / `.dockerignore` 中排除。
+- 公网部署时，建议：
+  - 用反向代理加登录/访问控制；
+  - 设置 `AI_JIE_KOU_KEY` 给 `/api/ai/*` 加一道 Key；
+  - 不要把 8001 / 8765 直接暴露到公网。
+- 系统设置接口不会回显完整密码/Key，但**能修改配置**；公网必须加访问控制。
 
 ---
 
